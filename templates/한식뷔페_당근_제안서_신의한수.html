@@ -1,0 +1,260 @@
+<title>한식뷔페 당근 비즈프로필·광고 제안서 — 신의한수 사례</title>
+<style>
+  :root{
+    --orange:#FF7E36; --orange-deep:#F1600B; --orange-soft:#FFE7D6;
+    --cream:#FFF6EF; --card:#FFFFFF; --ink:#2A2016; --muted:#8A7A6D;
+    --line:#F0E3D8; --green:#22B573; --blue:#3B82F6; --gold:#F5A623;
+    --shadow:0 1px 2px rgba(60,30,10,.05), 0 8px 24px rgba(200,90,20,.07);
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:light}
+  body{
+    margin:0; background:linear-gradient(180deg,#FFEFE2 0%,var(--cream) 22%,var(--cream) 100%);
+    color:var(--ink);
+    font-family:"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  .sheet{max-width:1000px; margin:0 auto; padding:34px 30px 0;}
+  .badge{display:inline-block; background:var(--card); color:var(--orange-deep);
+    font-weight:800; font-size:13px; letter-spacing:.02em; padding:7px 15px; border-radius:999px;
+    box-shadow:var(--shadow);}
+  .brandmark{width:52px;height:52px;border-radius:15px;background:var(--orange);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(241,96,11,.35)}
+  .brandmark svg{width:30px;height:30px}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  h1{font-size:38px; line-height:1.18; font-weight:900; margin:16px 0 8px; letter-spacing:-.02em; text-wrap:balance}
+  h1 .hl{color:var(--orange-deep)}
+  .sub{font-size:15px;color:var(--muted);font-weight:600;margin:0 0 22px}
+  .sub b{color:var(--ink)}
+
+  /* business card */
+  .biz{background:linear-gradient(180deg,#FFF3EA,#FFFFFF); border:1px solid var(--orange-soft);
+    border-radius:20px; padding:20px 22px; display:flex; gap:18px; align-items:center; box-shadow:var(--shadow)}
+  .biz-logo{flex:0 0 auto;width:62px;height:62px;border-radius:16px;border:2px dashed var(--orange);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--orange-deep);
+    font-weight:900;font-size:14px;line-height:1.05;background:#fff}
+  .biz-name{font-size:21px;font-weight:900;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .stars{color:var(--gold);font-weight:900;font-size:16px}
+  .biz-meta{color:#5c4d40;font-size:13.5px;margin:5px 0 10px}
+  .biz-meta b{color:var(--orange-deep)}
+  .tags{display:flex;gap:7px;flex-wrap:wrap}
+  .tag{background:var(--orange-soft);color:var(--orange-deep);font-weight:700;font-size:12px;
+    padding:5px 11px;border-radius:999px}
+
+  .sec-label{display:flex;align-items:center;gap:9px;font-size:19px;font-weight:900;margin:30px 2px 14px}
+  .sec-label::before{content:"";width:5px;height:19px;border-radius:3px;background:var(--orange)}
+  .sec-label .note{font-size:12.5px;color:var(--muted);font-weight:600}
+
+  /* stat tiles */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .stat{background:var(--card);border-radius:18px;padding:18px 20px;box-shadow:var(--shadow);
+    display:flex;gap:16px;align-items:center;border:1px solid var(--line)}
+  .stat .big{flex:0 0 128px}
+  .stat .num{font-size:34px;font-weight:900;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+  .stat .num span{font-size:17px;font-weight:800;margin-left:2px}
+  .stat .cap{font-size:13px;color:#5c4d40;font-weight:700;margin-top:6px}
+  .stat .delta{font-size:12.5px;font-weight:800;color:var(--green);margin-top:4px}
+  .stat .aside{flex:1;background:var(--cream);border-radius:12px;padding:11px 13px;border:1px solid var(--line)}
+  .stat .aside .t{font-size:12px;color:var(--muted);font-weight:700}
+  .stat .aside .v{font-size:19px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums}
+  .stat .aside .v small{font-size:12px;color:var(--muted);font-weight:700}
+  .stat .aside .s{font-size:11.5px;color:var(--orange-deep);font-weight:700;margin-top:3px}
+
+  /* charts */
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .chart{background:var(--card);border-radius:18px;padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--line)}
+  .chart h3{margin:0;font-size:16px;font-weight:900}
+  .chart h3 em{color:var(--orange-deep);font-style:normal}
+  .chart .desc{font-size:12.5px;color:var(--muted);font-weight:600;margin:5px 0 8px}
+  .legend{display:flex;gap:14px;justify-content:flex-end;font-size:12px;font-weight:700;color:#5c4d40;margin-top:6px}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+  /* 소식 row */
+  .feed{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-top:14px;align-items:stretch}
+  .panel{background:var(--card);border-radius:18px;padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--line)}
+  .panel h3{margin:0 0 3px;font-size:16px;font-weight:900}
+  .panel h3 em{color:var(--orange-deep);font-style:normal}
+  .panel .desc{font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:12px}
+  .post{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px dashed var(--line)}
+  .post:first-of-type{border-top:none}
+  .post .rk{flex:0 0 22px;height:22px;border-radius:50%;background:var(--orange);color:#fff;font-weight:900;
+    font-size:12px;display:flex;align-items:center;justify-content:center}
+  .post .rk.g{background:#CDBDAE}
+  .post .tt{flex:1;font-size:13.5px;font-weight:600}
+  .post .vw{font-size:12.5px;color:var(--muted);font-weight:800;font-variant-numeric:tabular-nums}
+  .why{display:flex;flex-direction:column;gap:13px}
+  .why .item .h{font-size:14px;font-weight:900;display:flex;align-items:center;gap:7px}
+  .why .item .p{font-size:12.5px;color:#5c4d40;font-weight:600;margin:3px 0 0 26px}
+
+  /* testimonial */
+  .testi{background:linear-gradient(180deg,#FFF3EA,#fff);border:1px solid var(--orange-soft);
+    border-radius:20px;padding:20px 22px;margin-top:14px;box-shadow:var(--shadow)}
+  .testi .who{display:flex;align-items:center;gap:10px;font-weight:900;font-size:14px;margin-bottom:12px}
+  .testi .who .av{width:34px;height:34px;border-radius:10px;background:var(--orange);color:#fff;font-weight:900;
+    font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1}
+  .bubble{max-width:78%;padding:11px 15px;border-radius:14px;font-size:13.5px;font-weight:600;margin-bottom:9px}
+  .bubble.them{background:#F4EADF;border-bottom-left-radius:4px}
+  .bubble.us{background:#FFF0B8;margin-left:auto;border-bottom-right-radius:4px}
+  .bubble .chk{color:var(--green);font-weight:900}
+
+  /* CTA */
+  .cta{max-width:1000px;margin:26px auto 0;background:linear-gradient(100deg,var(--orange),var(--orange-deep));
+    color:#fff;padding:24px 34px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;
+    border-radius:20px}
+  .cta .l h2{margin:0 0 5px;font-size:23px;font-weight:900;letter-spacing:-.01em}
+  .cta .l p{margin:0;font-size:13.5px;opacity:.92;font-weight:600}
+  .cta .r{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .cta .btn{background:#fff;color:var(--orange-deep);font-weight:900;font-size:16px;padding:13px 22px;
+    border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.18);white-space:nowrap}
+  .cta .contact{font-size:12.5px;font-weight:700;opacity:.95}
+
+  /* service strip */
+  .svc{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .svc .s{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px 16px;box-shadow:var(--shadow)}
+  .svc .s .n{font-size:11px;font-weight:900;color:var(--orange-deep);letter-spacing:.04em}
+  .svc .s .t{font-size:15px;font-weight:900;margin:6px 0 3px}
+  .svc .s .d{font-size:12px;color:#5c4d40;font-weight:600}
+
+  .foot{max-width:1000px;margin:0 auto;padding:14px 30px 30px;font-size:11px;color:var(--muted);line-height:1.6}
+
+  @media (max-width:720px){
+    .stats,.charts,.feed,.svc{grid-template-columns:1fr}
+    h1{font-size:28px}.stat .big{flex-basis:110px}
+  }
+</style>
+
+<div class="sheet">
+  <div class="top">
+    <div>
+      <span class="badge">🥕 당근 비즈프로필 · 광고 제안서</span>
+      <h1>동네 단골이 곧 매출입니다.<br><span class="hl">한식뷔페</span>, 당근에서 증명했습니다.</h1>
+      <p class="sub">실제 성공 사례 &nbsp;—&nbsp; <b>신의한수 · 지축역 한식뷔페</b></p>
+    </div>
+    <div class="brandmark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M5 19c6 3 13-4 10-10-6-3-13 4-10 10z" fill="#fff"/><path d="M14 9c1.5-2 4-3 6-2.5M15 7c.5-2 2-3.5 4-3.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
+  <div class="biz">
+    <div class="biz-logo">신의<br>한수</div>
+    <div>
+      <div class="biz-name">신의한수 · 지축역 한식뷔페 <span class="stars">★ 5.0</span></div>
+      <div class="biz-meta">경기 고양시 덕양구 지축동 · 한식뷔페 · 매일 11:00~14:30 &nbsp;|&nbsp; <b>9,000원대 무한리필 · 매일 15가지 이상 반찬</b></div>
+      <div class="tags">
+        <span class="tag"># 무한리필</span><span class="tag"># 가성비점심</span>
+        <span class="tag"># 직장인점심</span><span class="tag"># 지축맛집</span><span class="tag"># 집밥</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">숫자로 확인한 성과 <span class="note">· 실제 당근 비즈프로필 화면 기준 (26.07.06)</span></div>
+  <div class="stats">
+    <div class="stat">
+      <div class="big"><div class="num">839<span>명</span></div><div class="cap">현재 단골 고객</div><div class="delta">▲ 꾸준히 우상향</div></div>
+      <div class="aside"><div class="t">단골 고객수 ⓘ</div><div class="v">839 <small>명</small></div><div class="s">단골 = 재노출 자산</div></div>
+    </div>
+    <div class="stat">
+      <div class="big"><div class="num">1,261<span>회</span></div><div class="cap">주간 프로필 조회수</div><div class="delta">▲ 전주 대비 +661회</div></div>
+      <div class="aside"><div class="t">조회수 ⓘ</div><div class="v">1,261 <small>회</small></div><div class="s">최근 7일 · +661회</div></div>
+    </div>
+    <div class="stat">
+      <div class="big"><div class="num">1,113<span>명</span></div><div class="cap">주간 방문 고객수</div><div class="delta">▲ 전주 대비 +625명</div></div>
+      <div class="aside"><div class="t">방문 고객수 ⓘ</div><div class="v">1,113 <small>명</small></div><div class="s">최근 7일 · +625명</div></div>
+    </div>
+    <div class="stat">
+      <div class="big"><div class="num">516<span>명</span></div><div class="cap">신규 단골 (1주)</div><div class="delta">▲ 상위노출 효과</div></div>
+      <div class="aside"><div class="t">신규 단골 고객수 ⓘ</div><div class="v">516 <small>명</small></div><div class="s">1주간 신규 확보</div></div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart">
+      <h3>조회수, 2주 만에 <em>2배 이상 성장</em></h3>
+      <div class="desc">주간 조회수 600회 → 1,261회</div>
+      <svg viewBox="0 0 440 156" width="100%" role="img" aria-label="주간 조회수 성장 라인 차트">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FF7E36" stop-opacity="0.28"/>
+            <stop offset="1" stop-color="#FF7E36" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="24" y1="126" x2="420" y2="126" stroke="#F0E3D8" stroke-width="1"/>
+        <path d="M24,110 L60,116 L96,100 L132,106 L168,86 L204,92 L240,70 L276,74 L312,56 L348,60 L384,40 L416,26
+                 L416,126 L24,126 Z" fill="url(#lg)"/>
+        <path d="M24,110 L60,116 L96,100 L132,106 L168,86 L204,92 L240,70 L276,74 L312,56 L348,60 L384,40 L416,26"
+              fill="none" stroke="#F1600B" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="416" cy="26" r="5.5" fill="#fff" stroke="#F1600B" stroke-width="3"/>
+        <text x="24" y="146" font-size="11" fill="#8A7A6D" font-weight="700">6.22</text>
+        <text x="398" y="146" font-size="11" fill="#8A7A6D" font-weight="700">7.5</text>
+      </svg>
+    </div>
+    <div class="chart">
+      <h3>방문 고객 수</h3>
+      <div class="desc">최근 7일 · 단골 142명 · 단골 외 971명</div>
+      <svg viewBox="0 0 440 156" width="100%" role="img" aria-label="일자별 방문 고객수 막대 차트">
+        <line x1="20" y1="126" x2="424" y2="126" stroke="#F0E3D8" stroke-width="1"/>
+        <!-- 7 stacked bars: green(단골 외) top, blue(단골) bottom -->
+        <g>
+          <!-- bar template positions -->
+          <!-- day1 -->
+          <rect x="34"  y="60"  width="38" height="52" rx="4" fill="#22B573"/><rect x="34"  y="112" width="38" height="14" rx="3" fill="#3B82F6"/>
+          <rect x="90"  y="70"  width="38" height="42" rx="4" fill="#22B573"/><rect x="90"  y="112" width="38" height="14" rx="3" fill="#3B82F6"/>
+          <rect x="146" y="66"  width="38" height="46" rx="4" fill="#22B573"/><rect x="146" y="112" width="38" height="14" rx="3" fill="#3B82F6"/>
+          <rect x="202" y="52"  width="38" height="60" rx="4" fill="#22B573"/><rect x="202" y="112" width="38" height="14" rx="3" fill="#3B82F6"/>
+          <rect x="258" y="72"  width="38" height="40" rx="4" fill="#22B573"/><rect x="258" y="112" width="38" height="14" rx="3" fill="#3B82F6"/>
+          <rect x="314" y="58"  width="38" height="54" rx="4" fill="#22B573"/><rect x="314" y="112" width="38" height="14" rx="3" fill="#3B82F6"/>
+          <rect x="370" y="64"  width="38" height="48" rx="4" fill="#22B573"/><rect x="370" y="112" width="38" height="14" rx="3" fill="#3B82F6"/>
+        </g>
+      </svg>
+      <div class="legend"><span><i style="background:#22B573"></i>단골 외</span><span><i style="background:#3B82F6"></i>단골</span></div>
+    </div>
+  </div>
+
+  <div class="feed">
+    <div class="panel">
+      <h3>매일 '소식'을 올리면 <em>자연·상위 노출</em>됩니다</h3>
+      <div class="desc">주간 소식 조회수 634회 (+245) · 매일 메뉴 소식 발행</div>
+      <div class="post"><div class="rk">1</div><div class="tt">신의한수 이번 주 주간식단표가 나왔습니다</div><div class="vw">232 조회</div></div>
+      <div class="post"><div class="rk">2</div><div class="tt">금요일 메뉴 공개! 탕수육까지 준비했습니다</div><div class="vw">159 조회</div></div>
+      <div class="post"><div class="rk g">3</div><div class="tt">보쌈수육 &amp; 오징어미나리초무침 준비했어요</div><div class="vw">133 조회</div></div>
+      <div class="post"><div class="rk g">4</div><div class="tt">직장인들이 점심시간에 신의한수를 찾는 이유</div><div class="vw">129 조회</div></div>
+    </div>
+    <div class="panel why">
+      <div class="item"><div class="h">🔍 동네 검색 자연노출</div><div class="p">'지축 한식뷔페' 검색 시 상단에 그대로 노출</div></div>
+      <div class="item"><div class="h">📈 단골↑ → 상위노출↑</div><div class="p">단골이 늘수록 목록에서 더 잘 보입니다</div></div>
+      <div class="item"><div class="h">🎟️ 쿠폰으로 재방문 유도</div><div class="p">100장 현금 구매 시 10% 등 단골 혜택</div></div>
+    </div>
+  </div>
+
+  <div class="sec-label">대표님이 직접 확인한 변화</div>
+  <div class="testi">
+    <div class="who"><span class="av">신의<br>한수</span> 신의한수 한은주 대표님</div>
+    <div class="bubble them">확실히 당근 보고 매장 방문 오신 분들이 많아졌어요~ 주차장이랑 시간도 물어보시는데 추가로 내용 넣어주세요. 정말 수고 많으셨습니다 😊</div>
+    <div class="bubble us"><span class="chk">자연노출 ✔</span> &nbsp;대표님, 식사시간에 말씀드린 대로 동네 검색에서 자연노출까지 되었습니다!</div>
+    <div class="bubble us"><span class="chk">상위노출 ✔</span> &nbsp;단골이 많아지면서 상위노출이 되니 훨씬 더 잘 보이네요! ^^</div>
+  </div>
+
+  <div class="sec-label">시작부터 끝까지, 이렇게 함께 관리합니다</div>
+  <div class="svc">
+    <div class="s"><div class="n">STEP 01</div><div class="t">비즈프로필 개설</div><div class="d">카테고리·대표키워드·사진·소개글 세팅</div></div>
+    <div class="s"><div class="n">STEP 02</div><div class="t">매일 소식 발행</div><div class="d">주간식단·신메뉴로 자연·상위 노출 유도</div></div>
+    <div class="s"><div class="n">STEP 03</div><div class="t">쿠폰 · 단골 관리</div><div class="d">첫방문·재방문 쿠폰으로 단골 락인</div></div>
+    <div class="s"><div class="n">STEP 04</div><div class="t">지역 광고 운영</div><div class="d">반경·타겟·예산 설정 + 성과 리포트</div></div>
+  </div>
+</div>
+
+<div class="cta">
+  <div class="l">
+    <h2>이런 결과, 우리 매장에서도 만들 수 있습니다.</h2>
+    <p>비즈프로필 개설 · 매일 소식 발행 · 쿠폰 · 광고까지, 시작부터 함께 관리해 드립니다.</p>
+  </div>
+  <div class="r">
+    <span class="btn">지금 상담 신청하기 →</span>
+    <span class="contact">당근 지역광고 담당 · 연락처 000-0000-0000</span>
+  </div>
+</div>
+
+<div class="foot">
+  ※ 본 자료의 수치는 신의한수 매장의 실제 당근 비즈프로필 화면 기준(26.07.06)이며, 성과는 매장·상권·시즌·운영 상황에 따라 편차가 있어 동일한 결과를 보장하지 않습니다.
+  후기·광고 문구는 표시광고법 및 당근 커뮤니티·비즈니스 정책을 준수하여 게시합니다. &nbsp;·&nbsp; [연락처·담당자]는 실제 정보로 교체 후 사용하세요.
+</div>
