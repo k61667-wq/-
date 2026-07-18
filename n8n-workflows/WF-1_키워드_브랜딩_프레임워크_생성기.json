@@ -1,0 +1,275 @@
+{
+  "name": "WF-1 · 당근 SEO 키워드/브랜딩 프레임워크 생성기",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-1 · 키워드/브랜딩 프레임워크 생성기\n\n**흐름:** 폼 입력 → Claude 분석 → JSON 파싱 → 시트 저장 → 텔레그램 알림\n\n### ⚙️ 사용 전 설정\n1. **Claude 키워드 분석** 노드 → Header Auth 자격증명 생성\n   - Name: `x-api-key`  /  Value: `본인 Anthropic API 키`\n   - (모델 변경은 노드의 JSON Body에서)\n2. **고객사마스터 저장** 노드 → Google Sheets 자격증명 연결\n   - 스프레드시트에 `고객사마스터` 시트(탭) 추가\n   - 1행 헤더: 생성시각 / 상호명 / 업종 / 지역 / 핵심키워드 / 서비스키워드 /\n     금기어 / Primary / Secondary / LongTail / Regional / Additional /\n     필수기재상단 / 필수기재하단 / 해시태그 / 리포트\n3. **텔레그램** 노드 → Bot 자격증명 연결 + `chatId` 실제값으로 교체\n\n### ▶ 사용법\n폼 URL 열고 업체 정보 입력 → 결과가 시트에 쌓임 → 값 복사해서 당근 자동실행앱 2·4단계에 붙여넣기",
+        "height": 560,
+        "width": 700,
+        "color": 5
+      },
+      "id": "30bd20d3-23f6-4d38-ae80-a3b904b23fc8",
+      "name": "안내 2ce8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "고객사 온보딩 · SEO 키워드/브랜딩 프레임워크 생성",
+        "formDescription": "업체 정보를 입력하면 AI가 키워드·필수기재(상/하단)·금기어를 자동 생성해 시트에 저장합니다.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "상호명",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "업종/카테고리",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "지역(시/구/동)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "서비스/매장 설명",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "타겟 고객"
+            },
+            {
+              "fieldLabel": "강점/특징(USP)",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "참고 리뷰/프로필 내용",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8ea99391-5049-4146-8b8b-3f9937c00450",
+      "name": "고객사 정보 입력",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -40,
+        300
+      ],
+      "webhookId": "f36486e8-a8fd-414d-9c61-67d08d73ec74"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6a944dc0-b156-4d39-8a3f-6168aa7acbbb",
+              "name": "systemPrompt",
+              "type": "string",
+              "value": "# Role\n\nYou are a senior Local SEO strategist and Naver/Carrot Business Profile optimization consultant specializing in Korean local search marketing.\n\nYour expertise includes:\n- Carrot Business Profile optimization\n- Local SEO\n- Naver Place SEO\n- Search intent analysis\n- Keyword research\n- Competitor analysis\n- Content strategy\n\nYour objective is to identify the keywords that will maximize the company's visibility within its target region.\n\n# Task\nI will share a Carrot Business Profile page.\nAnalyze every piece of information available (business name, category, description, services, images, reviews, region, target customers, positioning).\nInfer which keywords customers are most likely to search when looking for this business.\n\n# Analysis Process\nStep 1. Business Analysis: category, core services, target customers, service area, USP, local characteristics.\nStep 2. Customer Search Intent: think like a customer; separate into Informational / Commercial / Transactional / Local.\nStep 3. Keyword Research: Primary (5-10), Secondary (10-20), Long-Tail (20-30, region+service / region+industry / region+problem / region+consult / region+recommend / region+price / region+review).\nStep 4. Regional SEO: city, 구, 동, landmarks, local behavior. Recommend highest-potential local combinations.\nStep 5. Competitor Analysis: infer competitors; classify High/Medium/Low competition; recommend priorities.\nStep 6. Content Strategy: how to use keywords across Carrot Profile, News Posts, Neighborhood Life, Naver Blog, Naver Place, Website, Image ALT.\n\n# Step 7. Branding Information Framework\nA. Top Required Information (standardized opening for every News Post): primary keyword, regional keyword, core service keyword, 1-2 sentence brand intro, compelling opening sentence, consistent branding message. Recognizable & reusable.\nB. Bottom Required Information (standardized closing for every News Post): concise company intro, core services, primary service area, natural CTA, contact/consultation guidance (placeholders if unknown), memorable closing. Professional, not promotional, reusable.\nC. Additional SEO Keywords: 20-30 additional non-duplicate ideas (related phrases, synonyms, problem-based, question keywords, industry terms, regional combos).\nD. News Post Keyword Package (per future post): Primary(1) / Supporting(3-5) / Long-Tail(5-10) / Related(5-10) / Hashtags(5-10 for Carrot).\n\n# News Post Writing Rules\n1) Analyze topic & choose keyword strategy. 2) Use Top Required Information at the start. 3) Write naturally around the primary keyword. 4) Include supporting/long-tail without stuffing. 5) End with Bottom Required Information. 6) Keep within 300 Korean characters unless requested. 7) Optimize for Carrot Business, Local SEO, mobile readability, trust, inquiry generation. 8) Verify no important keyword opportunity is omitted.\n\n# Output Format (human report -> put this whole thing into report_markdown)\n1. Business Analysis\n2. Customer Search Intent\n3. Primary Keywords\n4. Secondary Keywords\n5. Long-Tail Keywords\n6. Regional Keyword Strategy\n7. Competitor Keyword Analysis\n8. Recommended Keyword Priority (High / Medium / Low)\n9. Content Optimization Recommendations\n\n# Success Criteria\nIncrease local search appearance likelihood; reflect real search behavior; focus on commercial-intent keywords; balance volume/competition/conversion; be practical for ongoing content.\nIf the page lacks info, identify missing details and note them.\n\n---\n\n# 최종 출력 규칙 (매우 중요)\n분석을 마친 뒤에는 **오직 하나의 JSON 객체만** 출력해라.\n- 코드펜스(```)나 설명 문장, 인사말 없이 순수 JSON만.\n- 모든 값은 한국어로 작성.\n- 배열 값은 문자열 배열.\n아래 스키마를 정확히 따라라:\n\n{\n  \"report_markdown\": \"위 Output Format 1~9번을 모두 담은 전체 분석 리포트(마크다운)\",\n  \"core_keyword\": \"가장 중요한 핵심키워드 1개 (당근 자동실행앱 '핵심키워드' 칸에 넣을 값)\",\n  \"service_keywords\": [\"서비스키워드 배열 (당근 자동실행앱 '서비스키워드' 칸)\"],\n  \"forbidden_words\": [\"금기어/불포함 키워드 배열 (당근 자동실행앱 '금기어' 칸)\"],\n  \"primary_keywords\": [\"대표 키워드 5~10개\"],\n  \"secondary_keywords\": [\"보조 키워드 10~20개\"],\n  \"longtail_keywords\": [\"롱테일 키워드 20~30개\"],\n  \"regional_keywords\": [\"지역 조합 키워드\"],\n  \"additional_keywords\": [\"추가 SEO 키워드 20~30개(중복 제외)\"],\n  \"top_required\": \"News Post 필수기재내용 '상단' 완성 텍스트 (그대로 붙여넣기 가능)\",\n  \"bottom_required\": \"News Post 필수기재내용 '하단' 완성 텍스트 (그대로 붙여넣기 가능)\",\n  \"hashtags\": [\"#추천해시태그 5~10개\"]\n}\n"
+            },
+            {
+              "id": "f0a746bd-9c41-41b5-8ed1-74275ad8bb55",
+              "name": "userPrompt",
+              "type": "string",
+              "value": "=다음 당근마켓 비즈프로필 정보를 분석해줘.\n\n상호명: {{ $json['상호명'] }}\n업종/카테고리: {{ $json['업종/카테고리'] }}\n지역(시/구/동): {{ $json['지역(시/구/동)'] }}\n서비스/매장 설명: {{ $json['서비스/매장 설명'] }}\n타겟 고객: {{ $json['타겟 고객'] }}\n강점/특징(USP): {{ $json['강점/특징(USP)'] }}\n참고 리뷰/프로필 내용: {{ $json['참고 리뷰/프로필 내용'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a51641b7-1cbf-45e6-a384-5c751e8fd001",
+      "name": "프롬프트 구성",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-4-5-20250929\", max_tokens: 8000, system: $json.systemPrompt, messages: [ { role: \"user\", content: $json.userPrompt } ] }) }}",
+        "options": {}
+      },
+      "id": "b16aaae9-b687-4d8a-b814-f77d58a2ed70",
+      "name": "Claude 키워드 분석",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Claude 응답에서 JSON 추출 → 시트/텔레그램용 필드로 변환\nconst raw = $json?.content?.[0]?.text ?? $json?.content ?? $json?.text ?? '';\nlet text = typeof raw === 'string' ? raw : JSON.stringify(raw);\ntext = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();\nconst s = text.indexOf('{');\nconst e = text.lastIndexOf('}');\nif (s !== -1 && e !== -1) text = text.slice(s, e + 1);\nlet d;\ntry { d = JSON.parse(text); } catch (err) { d = { report_markdown: (typeof raw === 'string' ? raw : text), parse_error: err.message }; }\nconst j = (v) => Array.isArray(v) ? v.join(', ') : (v ?? '');\nconst form = $('고객사 정보 입력').item.json;\nreturn [{ json: {\n  생성시각: new Date().toISOString(),\n  상호명: form['상호명'],\n  업종: form['업종/카테고리'],\n  지역: form['지역(시/구/동)'],\n  핵심키워드: d.core_keyword ?? '',\n  서비스키워드: j(d.service_keywords),\n  금기어: j(d.forbidden_words),\n  Primary: j(d.primary_keywords),\n  Secondary: j(d.secondary_keywords),\n  LongTail: j(d.longtail_keywords),\n  Regional: j(d.regional_keywords),\n  Additional: j(d.additional_keywords),\n  필수기재상단: d.top_required ?? '',\n  필수기재하단: d.bottom_required ?? '',\n  해시태그: j(d.hashtags),\n  리포트: d.report_markdown ?? '',\n  파싱오류: d.parse_error ?? ''\n}}];"
+      },
+      "id": "b5fee28f-fbfe-4b8f-ab25-1adf9a0e29e7",
+      "name": "JSON 파싱",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1iSLUOQoeO1SwSdHcP6MzuR5kMZqzkEp10v9rJoVYZBQ",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "고객사마스터",
+          "mode": "list",
+          "cachedResultName": "고객사마스터"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "생성시각": "={{ $json['생성시각'] }}",
+            "상호명": "={{ $json['상호명'] }}",
+            "업종": "={{ $json['업종'] }}",
+            "지역": "={{ $json['지역'] }}",
+            "핵심키워드": "={{ $json['핵심키워드'] }}",
+            "서비스키워드": "={{ $json['서비스키워드'] }}",
+            "금기어": "={{ $json['금기어'] }}",
+            "Primary": "={{ $json['Primary'] }}",
+            "Secondary": "={{ $json['Secondary'] }}",
+            "LongTail": "={{ $json['LongTail'] }}",
+            "Regional": "={{ $json['Regional'] }}",
+            "Additional": "={{ $json['Additional'] }}",
+            "필수기재상단": "={{ $json['필수기재상단'] }}",
+            "필수기재하단": "={{ $json['필수기재하단'] }}",
+            "해시태그": "={{ $json['해시태그'] }}",
+            "리포트": "={{ $json['리포트'] }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "a71fbef9-cd4a-49c2-b890-87946a5caca4",
+      "name": "고객사마스터 저장",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "여기에_대표님_텔레그램_CHAT_ID",
+        "text": "=✅ *신규 고객사 분석 완료*\n\n🏪 업체: {{ $json['상호명'] }}\n📍 지역: {{ $json['지역'] }}\n🔑 핵심키워드: {{ $json['핵심키워드'] }}\n🛠 서비스키워드: {{ $json['서비스키워드'] }}\n🚫 금기어: {{ $json['금기어'] }}\n#️⃣ 해시태그: {{ $json['해시태그'] }}\n\n📄 시트 '고객사마스터'에 저장 완료 — 2·4단계에 그대로 복붙하세요.\n{{ $json['파싱오류'] ? '⚠️ 파싱오류: ' + $json['파싱오류'] : '' }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "45e6db8a-5b8d-4ce9-a471-91c158a854be",
+      "name": "텔레그램 완료 알림",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "고객사 정보 입력": {
+      "main": [
+        [
+          {
+            "node": "프롬프트 구성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "프롬프트 구성": {
+      "main": [
+        [
+          {
+            "node": "Claude 키워드 분석",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 키워드 분석": {
+      "main": [
+        [
+          {
+            "node": "JSON 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON 파싱": {
+      "main": [
+        [
+          {
+            "node": "고객사마스터 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "고객사마스터 저장": {
+      "main": [
+        [
+          {
+            "node": "텔레그램 완료 알림",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {},
+  "tags": []
+}

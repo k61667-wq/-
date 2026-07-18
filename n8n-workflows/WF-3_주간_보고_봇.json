@@ -1,0 +1,143 @@
+{
+  "name": "WF-3 · 당근 소식글 주간 보고 봇",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-3 · 주간 보고 봇\n\n**흐름:** 매주 금 18시 → 시트 읽기 → 집계 → 텔레그램 보고\n\n### ⚙️ 사용 전 설정\n1. **소식글 시트 읽기** 노드 → Google Sheets 자격증명 + `소식글` 탭 선택\n2. **주간 집계** 노드 → 코드 상단 `목표건수 = 100` 을 실제 캠페인 목표로 수정\n3. **주간 보고 전송** 노드 → Telegram Bot 연결 + chatId 교체\n4. 발행 요일/시간 변경은 **매주 금요일 18시** 트리거에서\n\n### 📊 집계 기준\n- 총 완료 = 상태에 '완료/예약완료' 포함 행 수\n- 금주 = 발행예정일(없으면 기록시각)이 최근 7일 이내\n- 실패 = 상태에 '실패' 포함 → 별도 경고 표기\n\nWF-2가 쌓은 `소식글` 시트를 그대로 사용합니다.",
+        "height": 560,
+        "width": 700,
+        "color": 4
+      },
+      "id": "4f0b0712-c76b-478b-bd38-996aacd01ac2",
+      "name": "안내 5312",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 18,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "5a7e8357-225d-4b32-91c9-eb04e6c584db",
+      "name": "매주 금요일 18시",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1iSLUOQoeO1SwSdHcP6MzuR5kMZqzkEp10v9rJoVYZBQ",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "소식글",
+          "mode": "list",
+          "cachedResultName": "소식글"
+        },
+        "options": {}
+      },
+      "id": "31a124ef-c3c1-4287-a763-59cde5d4efa8",
+      "name": "소식글 시트 읽기",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 주간 보고 집계\nconst 목표건수 = 100; // ← 캠페인 목표에 맞게 수정\nconst rows = items.map(i => i.json);\n\nconst done = (s) => /예약완료|발행완료|완료/.test(String(s || ''));\nconst fail = (s) => /실패/.test(String(s || ''));\n\nconst now = new Date();\nconst weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);\nconst parseDate = (r) => {\n  const v = r['발행예정일'] || r['기록시각'] || '';\n  const d = new Date(String(v).replace(/\\./g, '-'));\n  return isNaN(d) ? null : d;\n};\n\nlet totalDone = 0, totalFail = 0, weekDone = 0;\nconst byCompany = {};\nfor (const r of rows) {\n  const s = r['상태'] || r['발행상태'] || '';\n  if (done(s)) totalDone++;\n  if (fail(s)) totalFail++;\n  const d = parseDate(r);\n  if (d && d >= weekAgo && d <= now && done(s)) {\n    weekDone++;\n    const c = r['업체명'] || '기타';\n    byCompany[c] = (byCompany[c] || 0) + 1;\n  }\n}\n\nconst pad = (n) => String(n).padStart(2, '0');\nconst ymd = `${String(now.getFullYear()).slice(2)}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;\nconst breakdown = Object.entries(byCompany)\n  .sort((a, b) => b[1] - a[1])\n  .map(([c, n]) => `  · ${c}: ${n}개`).join('\\n') || '  · (금주 발행 없음)';\n\nlet msg = `안녕하세요. 작업 중간 보고 드립니다.\\n`;\nmsg += `소식글 작성 ${totalDone}/${목표건수}\\n`;\nmsg += `${ymd} / 금주 ${weekDone}개 완료\\n\\n`;\nmsg += `[업체별 금주 발행]\\n${breakdown}`;\nif (totalFail > 0) msg += `\\n\\n⚠️ 발행 실패 누적: ${totalFail}건 (시트 확인 필요)`;\n\nreturn [{ json: { message: msg, totalDone, totalFail, weekDone, 목표건수 } }];"
+      },
+      "id": "ab76885d-569a-46c0-98e5-3965daf91ac5",
+      "name": "주간 집계",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "여기에_대표님_텔레그램_CHAT_ID",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7ba16340-5eb6-4824-9d37-6c2ea7760662",
+      "name": "주간 보고 전송",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "매주 금요일 18시": {
+      "main": [
+        [
+          {
+            "node": "소식글 시트 읽기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "소식글 시트 읽기": {
+      "main": [
+        [
+          {
+            "node": "주간 집계",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "주간 집계": {
+      "main": [
+        [
+          {
+            "node": "주간 보고 전송",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {},
+  "tags": []
+}
