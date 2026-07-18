@@ -1,0 +1,181 @@
+{
+  "name": "WF-3 · 당근 발행현황 CSV 리포터(시트적재+주간보고)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-3 · 발행현황 CSV 리포터\n\nCSV 업로드 → 시트 upsert(중복제거) → 주간 보고 텔레그램\n※ 앱 '발행 현황' 우상단 [CSV] 버튼으로 내보낸 파일 사용\n\n### ⚙️ 사용 전 설정\n1. **발행현황 시트 upsert** → Google Sheets 연결\n   `발행현황` 탭 1행 헤더(=CSV 컬럼과 동일):\n   client·profile·account·publishedAt·title·url·doneJobId·bodyPreview\n   (doneJobId 기준으로 중복 없이 누적)\n2. **주간 집계** → 코드 상단 `목표건수 = 100` 수정\n3. **주간 보고 전송** → Telegram Bot + chatId 교체\n4. CSV 파일 필드 인식 안 되면 **CSV 파싱** 노드에서\n   Binary Property 를 업로드된 파일명으로 다시 선택\n\n### ▶ 사용법 (8단계 대체)\n발행현황 → [CSV] 내보내기 → 이 폼에 업로드 →\n시트 자동정리 + 주간 실적 보고 자동 발송. 수동집계 끝.",
+        "height": 600,
+        "width": 720,
+        "color": 4
+      },
+      "id": "2afcb9e8-5bed-46be-96df-b41b673c1218",
+      "name": "안내 60c7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "발행현황 CSV 업로드 · 주간 보고",
+        "formDescription": "앱 '발행 현황'에서 내보낸 CSV를 업로드하면 시트에 자동 정리하고 주간 보고를 텔레그램으로 보냅니다.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "CSV파일",
+              "fieldType": "file",
+              "requiredField": true,
+              "acceptFileTypes": ".csv",
+              "multipleFiles": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4095105b-c5fd-4bbe-961b-85f316227e18",
+      "name": "발행현황 CSV 업로드",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -40,
+        300
+      ],
+      "webhookId": "b136ed5d-d105-45b4-84ee-0cde77154f8b"
+    },
+    {
+      "parameters": {
+        "operation": "csv",
+        "binaryPropertyName": "CSV파일",
+        "options": {}
+      },
+      "id": "ff0490fb-ef7a-4aeb-8c96-e3cb9ac6eadd",
+      "name": "CSV 파싱",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1iSLUOQoeO1SwSdHcP6MzuR5kMZqzkEp10v9rJoVYZBQ",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "발행현황",
+          "mode": "list",
+          "cachedResultName": "발행현황"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [
+            "doneJobId"
+          ],
+          "schema": [],
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "c713922a-c079-4670-9a45-dc64a041fa35",
+      "name": "발행현황 시트 upsert",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 발행현황 CSV 주간 집계 (기준: 최근 7일, 한국시간)\nconst 목표건수 = 100; // ← 캠페인 목표 총량에 맞게 수정\nconst rows = $('CSV 파싱').all().map(i => i.json);\n\nconst now = new Date();\nconst weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);\nconst total = rows.length;\nlet week = 0;\nconst weekByClient = {};\nconst totalByClient = {};\nfor (const r of rows) {\n  const c = r.client || r['client'] || '기타';\n  totalByClient[c] = (totalByClient[c] || 0) + 1;\n  const d = new Date(r.publishedAt || r['publishedAt']);\n  if (!isNaN(d) && d >= weekAgo && d <= now) {\n    week++;\n    weekByClient[c] = (weekByClient[c] || 0) + 1;\n  }\n}\nconst kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);\nconst pad = (n) => String(n).padStart(2, '0');\nconst ymd = `${String(kst.getUTCFullYear()).slice(2)}.${pad(kst.getUTCMonth() + 1)}.${pad(kst.getUTCDate())}`;\nconst wk = Object.entries(weekByClient).sort((a, b) => b[1] - a[1])\n  .map(([c, n]) => `  · ${c}: ${n}개`).join('\\n') || '  · (최근 7일 발행 없음)';\nconst tot = Object.entries(totalByClient).sort((a, b) => b[1] - a[1])\n  .map(([c, n]) => `  · ${c}: ${n}개`).join('\\n');\n\nlet msg = `안녕하세요. 작업 중간 보고 드립니다.\\n`;\nmsg += `소식글 발행 ${total}/${목표건수}\\n`;\nmsg += `${ymd} 기준 / 최근 7일 ${week}개 완료\\n\\n`;\nmsg += `[고객사별 최근 7일]\\n${wk}\\n\\n`;\nmsg += `[고객사별 누적]\\n${tot}`;\n\nreturn [{ json: { message: msg, total, week, 목표건수 } }];"
+      },
+      "id": "287829d7-093b-4dd8-8a70-b24950a9caba",
+      "name": "주간 집계",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "여기에_대표님_텔레그램_CHAT_ID",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "736a1451-60b6-48a8-9c3c-a1827f6fa3dc",
+      "name": "주간 보고 전송",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        840,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "발행현황 CSV 업로드": {
+      "main": [
+        [
+          {
+            "node": "CSV 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CSV 파싱": {
+      "main": [
+        [
+          {
+            "node": "발행현황 시트 upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "발행현황 시트 upsert": {
+      "main": [
+        [
+          {
+            "node": "주간 집계",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "주간 집계": {
+      "main": [
+        [
+          {
+            "node": "주간 보고 전송",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {},
+  "tags": []
+}

@@ -1,26 +1,26 @@
 {
-  "name": "WF-2 · 당근 소식글 로거(시트+텔레그램 초안)",
+  "name": "WF-2 · 당근 소식글 초안 로거(시트+검수요청)",
   "nodes": [
     {
       "parameters": {
-        "content": "## WF-2 · 소식글 로거\n\n**흐름:** 폼 입력(제목/본문 붙여넣기) → 시트 기록 → 대표님 텔레그램 초안 전송\n\n### ⚙️ 사용 전 설정\n1. **소식글 시트 기록** 노드 → Google Sheets 자격증명 연결\n   - `소식글` 시트(탭) 1행 헤더:\n     기록시각 / 업체명 / 세트 / 제목 / 본문 / 발행예정일 / 발행예정시간 / 상태\n2. **대표님 초안 전송** 노드 → Telegram Bot 연결 + chatId 교체\n\n### ▶ 사용법 (6·7단계)\n당근 앱에서 생성된 제목+본문 복사 → 폼에 붙여넣기 →\n시트에 순차 기록 + 대표님께 초안 자동 발송.\n발행 실패 건은 상태=`발행실패`로 넣으면 시트에 그대로 남습니다.",
-        "height": 500,
+        "content": "## WF-2 · 소식글 초안 로거\n\n폼(제목/본문 붙여넣기) → 시트 기록 → 대표님 텔레그램 검수요청\n\n※ 앱 '소식글 검수' 화면엔 CSV가 없어 초안은 수동 입력합니다.\n\n### ⚙️ 사용 전 설정\n1. **초안 시트 기록** → Google Sheets 연결\n   `소식글초안` 탭 1행 헤더:\n   기록시각·업체명·세트·제목·본문·발행예정일·발행예정시간·상태\n2. **대표님 검수요청 전송** → Telegram Bot + chatId 교체\n\n### ▶ 사용법 (6단계)\n앱에서 생성된 제목+본문 복사 → 폼에 붙여넣기 →\n구글시트에 순차 기록 + 대표님께 시트링크와 함께 알림.\n대표님은 시트에서 검수 → 승인건만 앱에서 7단계 일괄 승인.",
+        "height": 540,
         "width": 700,
         "color": 6
       },
-      "id": "332d872d-8c26-406b-aeaf-15ddbd17aa44",
-      "name": "안내 6123",
+      "id": "a083eeb7-b7f4-43fe-9a36-b9547003082a",
+      "name": "안내 306b",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -40,
-        -300
+        -320
       ]
     },
     {
       "parameters": {
-        "formTitle": "소식글 검수 기록",
-        "formDescription": "생성된 소식글 제목/본문을 붙여넣으면 시트에 기록하고 대표님께 초안을 전송합니다.",
+        "formTitle": "소식글 초안 검수 요청",
+        "formDescription": "생성된 소식글 제목/본문을 붙여넣으면 구글시트에 기록하고 대표님께 검수 요청 알림을 보냅니다.",
         "formFields": {
           "values": [
             {
@@ -47,19 +47,19 @@
               "fieldLabel": "발행예정시간"
             },
             {
-              "fieldLabel": "발행상태",
+              "fieldLabel": "상태",
               "fieldType": "dropdown",
               "requiredField": true,
               "fieldOptions": {
                 "values": [
                   {
+                    "option": "검수대기"
+                  },
+                  {
                     "option": "예약완료"
                   },
                   {
                     "option": "발행실패"
-                  },
-                  {
-                    "option": "검수중"
                   }
                 ]
               }
@@ -68,22 +68,22 @@
         },
         "options": {}
       },
-      "id": "f109cb80-1ea6-4a79-8fba-9e429b2ce34b",
-      "name": "소식글 검수 입력",
+      "id": "6d12d811-6823-405d-ad15-f592cc1c3b6d",
+      "name": "소식글 초안 입력",
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.2,
       "position": [
         -40,
         300
       ],
-      "webhookId": "259170f4-2d42-44ad-a74f-adbeba927703"
+      "webhookId": "0436a6ad-b9be-49c2-95e9-828d311d2b32"
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "5e69ccd4-5a3d-4554-b71a-a4cb698b1ab1",
+              "id": "1729c7f4-7f08-4cbb-845c-24f2e25f6f3e",
               "name": "기록시각",
               "type": "string",
               "value": "={{ $now.format('yyyy-MM-dd HH:mm') }}"
@@ -93,7 +93,7 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "d8f595b5-4bba-41be-ab9c-068023539495",
+      "id": "4412e374-f9c5-43b4-a03e-9c4f511dda9b",
       "name": "기록시각 추가",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -112,9 +112,9 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "소식글",
+          "value": "소식글초안",
           "mode": "list",
-          "cachedResultName": "소식글"
+          "cachedResultName": "소식글초안"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -126,15 +126,15 @@
             "본문": "={{ $json['본문'] }}",
             "발행예정일": "={{ $json['발행예정일'] }}",
             "발행예정시간": "={{ $json['발행예정시간'] }}",
-            "상태": "={{ $json['발행상태'] }}"
+            "상태": "={{ $json['상태'] }}"
           },
           "matchingColumns": [],
           "schema": []
         },
         "options": {}
       },
-      "id": "4490db13-82f0-4573-b37a-3ad88983bb67",
-      "name": "소식글 시트 기록",
+      "id": "6afe7686-e736-41be-888b-05739ac33ea2",
+      "name": "초안 시트 기록",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
@@ -147,14 +147,13 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "여기에_대표님_텔레그램_CHAT_ID",
-        "text": "=📝 *소식글 초안 확인 요청*\n\n🏪 업체: {{ $json['업체명'] }}  ({{ $json['세트/회차'] }})\n🗓 발행예정: {{ $json['발행예정일'] }} {{ $json['발행예정시간'] }}\n📌 상태: {{ $json['발행상태'] }}\n\n*[제목]*\n{{ $json['제목'] }}\n\n*[본문]*\n{{ $json['본문'] }}",
+        "text": "=[소식글 초안 검수 요청]\n\n🏪 업체: {{ $json['업체명'] }} ({{ $json['세트/회차'] }})\n🗓 발행예정: {{ $json['발행예정일'] }} {{ $json['발행예정시간'] }}\n📌 상태: {{ $json['상태'] }}\n\n[제목]\n{{ $json['제목'] }}\n\n[본문]\n{{ $json['본문'] }}\n\n🔗 검수 시트: https://docs.google.com/spreadsheets/d/1iSLUOQoeO1SwSdHcP6MzuR5kMZqzkEp10v9rJoVYZBQ/edit",
         "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "Markdown"
+          "appendAttribution": false
         }
       },
-      "id": "6429a77e-f7b0-499e-85fa-bc09aa821667",
-      "name": "대표님 초안 전송",
+      "id": "c589360d-29f2-4631-92ae-a09490ab006c",
+      "name": "대표님 검수요청 전송",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
@@ -164,7 +163,7 @@
     }
   ],
   "connections": {
-    "소식글 검수 입력": {
+    "소식글 초안 입력": {
       "main": [
         [
           {
@@ -179,18 +178,18 @@
       "main": [
         [
           {
-            "node": "소식글 시트 기록",
+            "node": "초안 시트 기록",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "소식글 시트 기록": {
+    "초안 시트 기록": {
       "main": [
         [
           {
-            "node": "대표님 초안 전송",
+            "node": "대표님 검수요청 전송",
             "type": "main",
             "index": 0
           }
