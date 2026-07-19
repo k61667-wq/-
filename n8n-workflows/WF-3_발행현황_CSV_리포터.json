@@ -24,7 +24,7 @@
         "formFields": {
           "values": [
             {
-              "fieldLabel": "CSV파일",
+              "fieldLabel": "csvfile",
               "fieldType": "file",
               "requiredField": true,
               "acceptFileTypes": ".csv",
@@ -47,7 +47,7 @@
     {
       "parameters": {
         "operation": "csv",
-        "binaryPropertyName": "CSV파일",
+        "binaryPropertyName": "csvfile",
         "options": {}
       },
       "id": "ff0490fb-ef7a-4aeb-8c96-e3cb9ac6eadd",
