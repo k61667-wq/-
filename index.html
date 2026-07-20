@@ -143,6 +143,32 @@
     .foot-links { display: flex; gap: 22px; }
     .foot-links a:hover { color: var(--text); }
 
+    /* Forms */
+    .form { max-width: 520px; margin: 8px auto 0; text-align: left; }
+    .form .row { margin-bottom: 14px; }
+    .form label { display: block; font-size: .9rem; color: var(--muted); margin-bottom: 6px; }
+    .form input, .form textarea {
+      width: 100%; padding: 13px 15px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font-size: 1rem; font-family: inherit; transition: border-color .2s;
+    }
+    .form input:focus, .form textarea:focus { outline: none; border-color: var(--brand); }
+    .form textarea { min-height: 120px; resize: vertical; }
+    .form button.btn { width: 100%; border: none; cursor: pointer; font-size: 1rem; margin-top: 6px; }
+    .form-msg { margin-top: 14px; font-size: .92rem; min-height: 1.2em; text-align: center; }
+    .form-msg.ok { color: var(--accent); }
+    .form-msg.err { color: #ff6b6b; }
+    button[disabled] { opacity: .6; cursor: progress; }
+
+    .subscribe { display: flex; gap: 10px; flex-wrap: wrap; max-width: 420px; }
+    .subscribe input {
+      flex: 1; min-width: 200px; padding: 11px 16px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--bg-soft); color: var(--text); font-size: .95rem;
+    }
+    .subscribe input:focus { outline: none; border-color: var(--brand); }
+    .subscribe .btn { white-space: nowrap; cursor: pointer; border: none; }
+    .visits { display: inline-flex; align-items: center; gap: 6px; }
+    .visits b { color: var(--text); }
+
     /* Reveal animation */
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.in { opacity: 1; transform: none; }
@@ -262,24 +288,62 @@
         <div class="cta-box reveal">
           <h2>복잡함, 이제 혼잡스에 맡기세요.</h2>
           <p>어떤 일이 얽혀 있는지 편하게 알려주세요. 첫 상담은 무료입니다.</p>
-          <a href="mailto:hello@honjabs.example" class="btn">이메일로 문의하기</a>
+          <form class="form" id="contactForm">
+            <div class="row">
+              <label for="c-name">이름</label>
+              <input id="c-name" name="name" type="text" required placeholder="홍길동" autocomplete="name" />
+            </div>
+            <div class="row">
+              <label for="c-contact">연락처 (이메일 또는 전화번호)</label>
+              <input id="c-contact" name="contact" type="text" required placeholder="you@example.com" />
+            </div>
+            <div class="row">
+              <label for="c-message">문의 내용</label>
+              <textarea id="c-message" name="message" required placeholder="어떤 일이 얽혀 있나요? 편하게 적어주세요."></textarea>
+            </div>
+            <button type="submit" class="btn" id="contactBtn">문의 보내기</button>
+            <div class="form-msg" id="contactMsg" role="status" aria-live="polite"></div>
+          </form>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="wrap foot">
-      <div>© <span id="year"></span> HONJABS. 복잡한 일을 심플하게.</div>
-      <div class="foot-links">
-        <a href="#features">서비스</a>
-        <a href="#how">진행 방식</a>
-        <a href="#contact">문의</a>
+    <div class="wrap">
+      <div class="foot" style="margin-bottom: 30px; align-items: flex-start;">
+        <div style="max-width: 440px;">
+          <div style="color: var(--text); font-weight: 600; margin-bottom: 10px;">뉴스레터 구독</div>
+          <p style="margin-bottom: 12px;">복잡함을 줄이는 팁과 소식을 가끔 보내드립니다.</p>
+          <form class="subscribe" id="subForm">
+            <input id="s-email" name="email" type="email" required placeholder="이메일 주소" autocomplete="email" />
+            <button type="submit" class="btn" id="subBtn">구독</button>
+          </form>
+          <div class="form-msg" id="subMsg" role="status" aria-live="polite" style="text-align: left;"></div>
+        </div>
+        <div class="foot-links">
+          <a href="#features">서비스</a>
+          <a href="#how">진행 방식</a>
+          <a href="#contact">문의</a>
+        </div>
+      </div>
+      <div class="foot" style="border-top: 1px solid var(--border); padding-top: 22px;">
+        <div>© <span id="year"></span> HONJABS. 복잡한 일을 심플하게.</div>
+        <div class="visits">👀 누적 방문 <b id="visitCount">–</b></div>
       </div>
     </div>
   </footer>
 
+  <!-- Supabase JS 클라이언트 (UMD 빌드, window.supabase 전역 제공) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    /* ─────────────── Supabase 연결 설정 ───────────────
+       공개(publishable) 키라 브라우저 노출 OK.
+       테이블/정책은 아래 SQL을 Supabase SQL Editor에서 먼저 실행하세요. */
+    const SUPABASE_URL = 'https://yxywwtxsxxzdenldnbcs.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_5Vbt8T9TpA2lp3BcjFqqsA_ANsqc7Di';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     // 연도 자동 표기
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -301,6 +365,83 @@
       });
     }, { threshold: 0.15 });
     document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+    // ─────────────── 1) 문의 폼 → inquiries 테이블 ───────────────
+    const contactForm = document.getElementById('contactForm');
+    contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('contactBtn');
+      const msg = document.getElementById('contactMsg');
+      msg.className = 'form-msg';
+      msg.textContent = '';
+      btn.disabled = true;
+      const label = btn.textContent;
+      btn.textContent = '보내는 중…';
+      const payload = {
+        name: document.getElementById('c-name').value.trim(),
+        contact: document.getElementById('c-contact').value.trim(),
+        message: document.getElementById('c-message').value.trim(),
+      };
+      const { error } = await db.from('inquiries').insert(payload);
+      if (error) {
+        msg.className = 'form-msg err';
+        msg.textContent = '전송에 실패했어요: ' + error.message;
+      } else {
+        msg.className = 'form-msg ok';
+        msg.textContent = '문의가 접수되었습니다. 곧 연락드릴게요! 🙌';
+        contactForm.reset();
+      }
+      btn.disabled = false;
+      btn.textContent = label;
+    });
+
+    // ─────────────── 2) 뉴스레터 구독 → subscribers 테이블 ───────────────
+    const subForm = document.getElementById('subForm');
+    subForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('subBtn');
+      const msg = document.getElementById('subMsg');
+      msg.className = 'form-msg';
+      msg.textContent = '';
+      btn.disabled = true;
+      const email = document.getElementById('s-email').value.trim();
+      const { error } = await db.from('subscribers').insert({ email });
+      if (error) {
+        if (error.code === '23505') {
+          msg.className = 'form-msg ok';
+          msg.textContent = '이미 구독 중이세요. 감사합니다!';
+        } else {
+          msg.className = 'form-msg err';
+          msg.textContent = '구독에 실패했어요: ' + error.message;
+        }
+      } else {
+        msg.className = 'form-msg ok';
+        msg.textContent = '구독 완료! 좋은 소식 보내드릴게요. ✨';
+        subForm.reset();
+      }
+      btn.disabled = false;
+    });
+
+    // ─────────────── 3) 방문자 카운터 → page_stats + increment_visits() RPC ───────────────
+    (async () => {
+      const el = document.getElementById('visitCount');
+      const SESSION_KEY = 'honjabs_counted';
+      try {
+        let count;
+        if (sessionStorage.getItem(SESSION_KEY)) {
+          // 같은 세션 재방문(새로고침)은 중복 집계하지 않고 현재 값만 조회
+          const { data } = await db.from('page_stats').select('count').eq('id', 'home').single();
+          count = data && data.count;
+        } else {
+          const { data } = await db.rpc('increment_visits');
+          count = data;
+          sessionStorage.setItem(SESSION_KEY, '1');
+        }
+        el.textContent = (count != null) ? Number(count).toLocaleString('ko-KR') : '–';
+      } catch (_) {
+        el.textContent = '–';
+      }
+    })();
   </script>
 </body>
 </html>
