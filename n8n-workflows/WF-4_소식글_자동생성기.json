@@ -1,0 +1,286 @@
+{
+  "name": "WF-4 · 당근 소식글 컨셉+자동 생성기",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-4 · 소식글 컨셉 + 자동 생성기\n\n폼 입력 → Claude가 컨셉+소식글 여러 개 생성 → 1건씩 분리 → 시트 저장 → 텔레그램 발송\n\n### ⚙️ 사용 전 설정\n1. **Claude 소식글 생성** → Header Auth(`x-api-key` = Anthropic 키) 연결\n   (WF-1에서 만든 자격증명 그대로 선택 가능)\n2. **소식글 시트 저장** → Google Sheets 연결\n   `소식글생성` 탭 1행 헤더:\n   생성시각·업체명·지역·컨셉·순번·세트·제목·본문·핵심키워드·해시태그·링크\n3. **소식글 텔레그램 전송** → Telegram Bot + chatId 교체\n   (소식글 1건당 텔레그램 메시지 1개 발송, 첫 건에 컨셉 표시)\n\n### ▶ 사용법\n비즈프로필 정보 입력(필수기재 상/하단·불포함키워드는 WF-1 결과 붙여넣으면 더 좋음)\n→ 생성 개수만큼 소식글이 시트에 쌓이고 대표님 텔레그램으로 전송됨\n→ 승인된 글을 당근 앱 '수동 작성' 또는 검수에 활용",
+        "height": 620,
+        "width": 740,
+        "color": 3
+      },
+      "id": "1d416949-e745-4a9c-a56b-a667cede9cd3",
+      "name": "안내 2fcd",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "소식글 컨셉 + 자동 생성",
+        "formDescription": "비즈프로필 정보를 입력하면 AI가 소식글 시리즈 컨셉을 잡고, 바로 쓸 수 있는 소식글을 여러 개 생성합니다.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "상호명",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "업종/카테고리",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "지역(시/구/동)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "비즈프로필 링크(참고용)"
+            },
+            {
+              "fieldLabel": "매장/서비스 설명(자세할수록 좋음)",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "핵심/서비스 키워드(선택)"
+            },
+            {
+              "fieldLabel": "필수기재 상단(선택)",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "필수기재 하단(선택)",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "불포함 키워드(선택)"
+            },
+            {
+              "fieldLabel": "말투&톤(선택)"
+            },
+            {
+              "fieldLabel": "컨셉/주제 힌트(선택)"
+            },
+            {
+              "fieldLabel": "생성 개수",
+              "fieldType": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "62487978-58f0-42c9-a0e5-8a9c15b8b516",
+      "name": "비즈프로필 정보 입력",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -40,
+        300
+      ],
+      "webhookId": "6b328e6d-8820-4a44-b7a9-3792434f1132"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "63b3ef1f-aa71-4a8b-ad4e-fd992baf3acb",
+              "name": "systemPrompt",
+              "type": "string",
+              "value": "# 역할\n너는 한국 당근마켓 비즈프로필 로컬 SEO 소식글 작성 전문가다.\n업체 정보를 받아 (1) 소식글 시리즈의 컨셉/방향을 잡고 (2) 바로 발행 가능한 소식글 여러 개를 생성한다.\n\n# 소식글 작성 규칙 (매우 중요)\n- 말투: 동네 이웃에게 말하듯 담백하고 편안하게. 과장·최상급·의료효과 표현 금지. 신뢰감 있게.\n- 구조: 제목(짧고 담백) + 본문 3~5문단.\n- 키워드: 지역명(동/읍/구)과 핵심 서비스 키워드를 자연스럽게 녹인다. 키워드 스터핑 금지.\n  롱테일(지역+서비스) 1~2개도 자연스럽게 포함.\n- 필수기재 상단이 주어지면 도입부에 자연스럽게 녹이고, 하단이 주어지면 마무리에 녹인다.\n  (안 주어지면 브랜드 일관성 있는 도입/마무리 문구를 스스로 만들어 매 글에 반복 사용)\n- 불포함 키워드는 절대 사용하지 않는다.\n- 각 글은 서로 다른 주제·각도(신상품/계절/사용팁/매장소개/자주 묻는 질문 등)로 다양하게.\n- 길이: 자연스럽게 약 300~500자.\n- 마지막 줄: 해시태그 5~6개(#지역 #핵심서비스 #롱테일 등).\n\n# 참고: 원하는 결과물 톤 예시\n제목: 반려동물용품은 강냥이에서 편하게 보세요\n본문: 강냥이입니다. 포곡읍에서 필요한 반려용품을 한곳에서 천천히 둘러보실 수 있게 준비해두었습니다.\n(중략, 담백한 동네 말투 3~4문단)\n#포곡읍 #반려동물용품 #포곡읍강아지용품 #용인처인구\n\n# 출력 규칙 (매우 중요)\n분석/생성을 마친 뒤 **오직 하나의 JSON 객체만** 출력한다. 코드펜스·설명·인사말 없이 순수 JSON만. 모든 값 한국어.\n스키마:\n{\n  \"concept\": \"이 업체 소식글 시리즈 전체 컨셉/방향 (2~3문장). 어떤 톤·어떤 키워드축·어떤 주제 순환인지.\",\n  \"posts\": [\n    {\n      \"set\": \"1세트\",\n      \"title\": \"소식글 제목\",\n      \"body\": \"소식글 본문 (문단 구분 포함, 마지막 줄에 해시태그)\",\n      \"primary_keyword\": \"이 글의 핵심 키워드 1개\",\n      \"hashtags\": [\"#해시태그\", \"...\"]\n    }\n  ]\n}\n요청한 개수만큼 posts 배열을 채운다. 개수 미지정 시 5개."
+            },
+            {
+              "id": "91feb630-307e-4871-b55a-143984f4fc2d",
+              "name": "userPrompt",
+              "type": "string",
+              "value": "=아래 업체의 당근 소식글 시리즈 컨셉을 잡고 소식글을 생성해줘.\n\n상호명: {{ $json['상호명'] }}\n업종/카테고리: {{ $json['업종/카테고리'] }}\n지역(시/구/동): {{ $json['지역(시/구/동)'] }}\n비즈프로필 링크: {{ $json['비즈프로필 링크(참고용)'] }}\n매장/서비스 설명: {{ $json['매장/서비스 설명(자세할수록 좋음)'] }}\n핵심/서비스 키워드: {{ $json['핵심/서비스 키워드(선택)'] }}\n필수기재 상단: {{ $json['필수기재 상단(선택)'] }}\n필수기재 하단: {{ $json['필수기재 하단(선택)'] }}\n불포함 키워드: {{ $json['불포함 키워드(선택)'] }}\n말투&톤: {{ $json['말투&톤(선택)'] }}\n컨셉/주제 힌트: {{ $json['컨셉/주제 힌트(선택)'] }}\n생성 개수: {{ $json['생성 개수'] || 5 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "daf21bbb-ffe7-4376-9812-eb8c775c5ef4",
+      "name": "프롬프트 구성",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"claude-sonnet-4-5-20250929\", max_tokens: 8000, system: $json.systemPrompt, messages: [ { role: \"user\", content: $json.userPrompt } ] }) }}",
+        "options": {}
+      },
+      "id": "3e9c872e-3b2a-4d19-86ee-5897abdcee6d",
+      "name": "Claude 소식글 생성",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Claude 응답 → 소식글 1건씩 개별 아이템으로 분리\nconst raw = $json?.content?.[0]?.text ?? $json?.content ?? $json?.text ?? '';\nlet text = typeof raw === 'string' ? raw : JSON.stringify(raw);\ntext = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();\nconst s = text.indexOf('{'), e = text.lastIndexOf('}');\nif (s !== -1 && e !== -1) text = text.slice(s, e + 1);\nlet d;\ntry { d = JSON.parse(text); } catch (err) { return [{ json: { 오류: 'JSON 파싱 실패: ' + err.message, 원문: text } }]; }\nconst f = $('비즈프로필 정보 입력').item.json;\nconst now = new Date().toISOString();\nconst posts = Array.isArray(d.posts) ? d.posts : [];\nconst hj = (v) => Array.isArray(v) ? v.join(' ') : (v ?? '');\nreturn posts.map((p, i) => ({ json: {\n  생성시각: now,\n  업체명: f['상호명'],\n  지역: f['지역(시/구/동)'],\n  컨셉: d.concept ?? '',\n  순번: i + 1,\n  세트: p.set ?? ((i + 1) + '세트'),\n  제목: p.title ?? '',\n  본문: p.body ?? '',\n  핵심키워드: p.primary_keyword ?? '',\n  해시태그: hj(p.hashtags),\n  링크: f['비즈프로필 링크(참고용)'] ?? ''\n}}));"
+      },
+      "id": "c4bc7158-35be-46ba-ab1f-36fd9fc3da38",
+      "name": "소식글 분리",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1iSLUOQoeO1SwSdHcP6MzuR5kMZqzkEp10v9rJoVYZBQ",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "소식글생성",
+          "mode": "list",
+          "cachedResultName": "소식글생성"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "생성시각": "={{ $json['생성시각'] }}",
+            "업체명": "={{ $json['업체명'] }}",
+            "지역": "={{ $json['지역'] }}",
+            "컨셉": "={{ $json['컨셉'] }}",
+            "순번": "={{ $json['순번'] }}",
+            "세트": "={{ $json['세트'] }}",
+            "제목": "={{ $json['제목'] }}",
+            "본문": "={{ $json['본문'] }}",
+            "핵심키워드": "={{ $json['핵심키워드'] }}",
+            "해시태그": "={{ $json['해시태그'] }}",
+            "링크": "={{ $json['링크'] }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "5c838f99-836a-46d5-b6af-496195f5ed2a",
+      "name": "소식글 시트 저장",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "여기에_대표님_텔레그램_CHAT_ID",
+        "text": "={{ $json['순번'] === 1 ? '📋 [시리즈 컨셉]\\n' + $json['컨셉'] + '\\n\\n━━━━━━━━━━\\n\\n' : '' }}[{{ $json['세트'] }}] 핵심: {{ $json['핵심키워드'] }}\n\n{{ $json['제목'] }}\n\n{{ $json['본문'] }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3f2d7fd9-8e76-4682-848f-26c7f5972e39",
+      "name": "소식글 텔레그램 전송",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "비즈프로필 정보 입력": {
+      "main": [
+        [
+          {
+            "node": "프롬프트 구성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "프롬프트 구성": {
+      "main": [
+        [
+          {
+            "node": "Claude 소식글 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude 소식글 생성": {
+      "main": [
+        [
+          {
+            "node": "소식글 분리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "소식글 분리": {
+      "main": [
+        [
+          {
+            "node": "소식글 시트 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "소식글 시트 저장": {
+      "main": [
+        [
+          {
+            "node": "소식글 텔레그램 전송",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {},
+  "tags": []
+}
