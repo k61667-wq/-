@@ -1,0 +1,147 @@
+{
+  "name": "WF-5 · 당근 소식글 검수 알림 봇(시트 연동)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-5 · 소식글 검수 알림 봇\n\n시트에 AI 초안 행이 추가되면(1분 주기 감지) → 컨펌 빈 건만 → 대표님 텔레그램 알림\n\n### ⚙️ 사용 전 설정\n1. **새 초안 감지(시트)** → Google Sheets Trigger 자격증명 연결\n   문서: 프로그램 연동 시트, 시트(탭): `소식글 (프로그램)` 선택\n   (문서ID: 17Eov1bJ...ITEKk)\n2. **대표님 검수 알림** → Telegram Bot + chatId 교체\n\n### 동작\n- 프로그램이 초안을 추가 → 새 행(컨펌 빈칸) → 이 봇이 대표님께 제목+본문 발송\n- 대표님은 시트 '컨펌' 칸에 승인/반려 → 프로그램이 발행 처리\n\n※ 컬럼: 발행일·제목·게시글 본문·당근 URL·사진첨부·업체·컨펌·ID·발행상태\n※ 트리거는 '행 추가' 기준. 알림 중복 없음(새 행당 1회).",
+        "height": 560,
+        "width": 720,
+        "color": 4
+      },
+      "id": "a025e7a9-9d93-4c47-9775-653a701ccc98",
+      "name": "안내 6288",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "17Eov1bJTrbHpSVanCBsAWg-L1s4H0Pa58PDVeeITEKk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "소식글 (프로그램)",
+          "mode": "list",
+          "cachedResultName": "소식글 (프로그램)"
+        },
+        "event": "rowAdded",
+        "options": {},
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "id": "a650e0fd-a684-4295-8e20-4e88aace0720",
+      "name": "새 초안 감지(시트)",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "59138cb6-2a17-4f36-886a-1259287f63b6",
+              "leftValue": "={{ $json['컨펌'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6cfaf572-0f87-4f7e-a60e-d66c46edf57e",
+              "leftValue": "={{ $json['제목'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "22f15a8c-44d4-4fdc-b958-749f123b8670",
+      "name": "검수대기 초안만",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "여기에_대표님_텔레그램_CHAT_ID",
+        "text": "=📝 [소식글 검수 요청]\n\n🏪 업체: {{ $json['업체'] }}\n📅 발행예정: {{ $json['발행일'] }}\n\n[제목]\n{{ $json['제목'] }}\n\n[본문]\n{{ $json['게시글 본문'] }}\n\n👉 구글시트 '소식글 (프로그램)' 탭의 '컨펌' 칸에서 승인 또는 반려를 선택해주세요.\n🔗 https://docs.google.com/spreadsheets/d/17Eov1bJTrbHpSVanCBsAWg-L1s4H0Pa58PDVeeITEKk/edit",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "8bb48e49-acf7-4537-bd13-3c808a027975",
+      "name": "대표님 검수 알림",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "새 초안 감지(시트)": {
+      "main": [
+        [
+          {
+            "node": "검수대기 초안만",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "검수대기 초안만": {
+      "main": [
+        [
+          {
+            "node": "대표님 검수 알림",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {},
+  "tags": []
+}
