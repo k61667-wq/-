@@ -54,6 +54,12 @@
   <label>계약 체결일</label>
   <input type="date" id="sign">
 
+  <label>부가세 표기</label>
+  <select id="vat">
+    <option value="included">VAT 포함 (한 줄로 표기)</option>
+    <option value="separate">VAT 별도 (부가세 줄 표시)</option>
+  </select>
+
   <div class="preview" id="pv">
     <div class="hd" id="pvName">패키지 미리보기</div>
     <table id="pvTbl"></table>
@@ -120,7 +126,7 @@
     var payload = {
       customerId: $('cust').value, repId: $('rep').value, packageId: $('pkg').value,
       startDate: $('start').value, months: $('months').value, signDate: $('sign').value,
-      sendEmail: $('email').checked
+      vatMode: $('vat').value, sendEmail: $('email').checked
     };
     google.script.run.withSuccessHandler(function(r){
       $('go').disabled=false; $('go').textContent='계약서 생성';

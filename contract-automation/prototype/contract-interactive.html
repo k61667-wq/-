@@ -92,7 +92,7 @@
   .kv .k{ background:var(--fill); font-weight:600; color:var(--ink-2); width:118px; }
   .kv tr.sum .k{ background:var(--brand-tint); color:var(--brand); }
   .kv tr.sum td{ font-weight:700; color:var(--brand); }
-  .kv tr.disc td.dv{ color:#b02a2a; }
+  .kv .dv{ color:#b02a2a; }
   .money{ font-variant-numeric:tabular-nums; }
   .articles{ margin-top:9px; border:.9px solid var(--brand); padding:7px 18px 11px; }
   .art{ margin:10px 0 0; break-inside:avoid; }
@@ -173,6 +173,13 @@
         <label>계약 체결일</label>
         <input type="date" id="inpSign">
       </div>
+      <div class="fld">
+        <label>부가세 표기</label>
+        <select id="selVat">
+          <option value="included">VAT 포함 (한 줄)</option>
+          <option value="separate">VAT 별도 (부가세 줄 표시)</option>
+        </select>
+      </div>
     </div>
     <div class="actions">
       <span class="cno">계약번호 <b id="cnoView">—</b></span>
@@ -226,19 +233,19 @@
     </div>
     <table class="tbl svc">
       <thead>
-        <tr><th style="width:32px">No</th><th style="width:96px">용역 항목</th><th>세부 내용</th><th style="width:54px">수량(개)</th><th style="width:48px">개월 수</th><th style="width:82px">단가(원)</th><th style="width:82px">금액(원)</th></tr>
+        <tr><th style="width:32px">No</th><th style="width:104px">용역 항목</th><th>세부 내용</th><th style="width:60px">수량(개)</th><th style="width:88px">단가(원)</th><th style="width:88px">금액(원)</th></tr>
       </thead>
-      <tbody id="svcBody"><tr><td class="empty-msg" colspan="7">패키지를 선택하면 용역 항목이 자동으로 채워집니다.</td></tr></tbody>
+      <tbody id="svcBody"><tr><td class="empty-msg" colspan="6">패키지를 선택하면 용역 항목이 자동으로 채워집니다.</td></tr></tbody>
     </table>
 
     <div class="splitrow">
       <div class="half">
         <table class="kv">
           <colgroup><col style="width:118px"><col></colgroup>
-          <tbody>
-            <tr><td class="k">총 공급가액</td><td class="money"><span id="tSupply" class="fill empty"></span></td></tr>
-            <tr class="disc"><td class="k">패키지 할인</td><td class="money"><span id="tDisc" class="dv fill empty"></span></td></tr>
-            <tr class="sum"><td class="k" style="width:127px">총 계약금액</td><td class="money" style="width:auto"><span id="tTotal" class="fill empty">￦</span> <span style="font-weight:400;font-size:10.5px;color:var(--ink-3)">(VAT 포함)</span></td></tr>
+          <tbody id="sumBody">
+            <tr><td class="k">총 공급가액</td><td class="money"><span class="fill empty"></span></td></tr>
+            <tr><td class="k">패키지 할인</td><td class="money"><span class="fill empty"></span></td></tr>
+            <tr class="sum"><td class="k" style="width:127px">총 계약금액</td><td class="money"><span class="fill empty">￦</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -343,7 +350,8 @@
   // ---- populate dropdowns ----
   DB.customers.forEach(function(c){ var o=document.createElement("option"); o.value=c.id; o.textContent=c.company+" ("+c.ceo+")"; $("selCustomer").appendChild(o); });
   DB.reps.forEach(function(r){ var o=document.createElement("option"); o.value=r.id; o.textContent=r.name+"  ·  "+r.phone; $("selRep").appendChild(o); });
-  DB.packages.forEach(function(p){ var o=document.createElement("option"); o.value=p.id; o.textContent=p.name+" 패키지  ·  "+p.durationMonths+"개월  ·  "+won(p.contractTotal); $("selPkg").appendChild(o); });
+  DB.packages.forEach(function(p){ var o=document.createElement("option"); o.value=p.id; o.textContent=p.name+"  ·  "+won(p.contractTotal); $("selPkg").appendChild(o); });
+  function currentPkg(){ return DB.packages.filter(function(x){return x.id===$("selPkg").value;})[0]; }
 
   function setFill(id, val){
     var el=$(id); if(!el) return;
@@ -370,8 +378,8 @@
 
   // ---- package → build rows dynamically + totals ----
   function applyPackage(){
-    var p = DB.packages.filter(function(x){return x.id===$("selPkg").value;})[0];
-    $("pkgBadge").textContent = p ? "선택: "+p.name+" 패키지" : "";
+    var p = currentPkg();
+    $("pkgBadge").textContent = p ? "선택: "+p.name : "";
     body.innerHTML = "";
     if(p){
       p.lines.forEach(function(l){
@@ -381,20 +389,40 @@
           '<td class="item">'+l.item+'</td>'+
           '<td class="desc">'+l.desc+'</td>'+
           '<td class="qty">'+l.qty+'</td>'+
-          '<td class="mon">'+l.months+'</td>'+
           '<td class="unit">'+comma(l.unitPrice)+'</td>'+
           '<td class="amt">'+comma(l.amount)+'</td>';
         body.appendChild(tr);
       });
-      setFill("tSupply", comma(p.listSupply)+" 원");
-      setFill("tDisc", p.discount>0 ? "−  "+comma(p.discount)+" 원" : "0 원");
-      setFill("tTotal", won(p.contractTotal));
       if(!$("inpMonths").value) $("inpMonths").value = p.durationMonths;
     } else {
-      body.innerHTML = '<tr><td class="empty-msg" colspan="7">패키지를 선택하면 용역 항목이 자동으로 채워집니다.</td></tr>';
-      ["tSupply","tDisc","tTotal"].forEach(function(id){ setFill(id,""); });
+      body.innerHTML = '<tr><td class="empty-msg" colspan="6">패키지를 선택하면 용역 항목이 자동으로 채워집니다.</td></tr>';
     }
+    renderSummary(p);
     recalcPeriod();
+  }
+
+  // ---- summary with VAT display toggle (포함/별도) ----
+  function renderSummary(p){
+    var b = $("sumBody");
+    if(!p){
+      b.innerHTML =
+        '<tr><td class="k">총 공급가액</td><td class="money"><span class="fill empty"></span></td></tr>'+
+        '<tr><td class="k">패키지 할인</td><td class="money"><span class="fill empty"></span></td></tr>'+
+        '<tr class="sum"><td class="k" style="width:127px">총 계약금액</td><td class="money"><span class="fill empty">￦</span></td></tr>';
+      return;
+    }
+    var mode = $("selVat").value;
+    var out =
+      '<tr><td class="k">총 공급가액</td><td class="money">'+comma(p.listSupply)+' 원</td></tr>'+
+      '<tr><td class="k">패키지 할인</td><td class="money"><span class="dv">'+(p.discount>0?'−  '+comma(p.discount):'0')+' 원</span></td></tr>';
+    if(mode==='separate'){
+      out += '<tr><td class="k">부가세 (VAT 10%)</td><td class="money">'+comma(p.vat)+' 원</td></tr>'+
+             '<tr class="sum"><td class="k" style="width:127px">총 계약금액</td><td class="money">'+won(p.contractTotal)+'</td></tr>';
+    } else {
+      out += '<tr class="sum"><td class="k" style="width:127px">총 계약금액</td><td class="money">'+won(p.contractTotal)+
+             ' <span style="font-weight:400;font-size:10.5px;color:var(--ink-3)">(VAT 포함)</span></td></tr>';
+    }
+    b.innerHTML = out;
   }
 
   // ---- dates ----
@@ -433,11 +461,13 @@
   $("selCustomer").addEventListener("change", function(){ applyCustomer(); genContractNo(); });
   $("selRep").addEventListener("change", applyRep);
   $("selPkg").addEventListener("change", applyPackage);
+  $("selVat").addEventListener("change", function(){ renderSummary(currentPkg()); });
   $("inpStart").addEventListener("change", function(){ recalcPeriod(); genContractNo(); });
   $("inpMonths").addEventListener("input", recalcPeriod);
   $("inpSign").addEventListener("change", applySign);
   $("btnReset").addEventListener("click", function(){
     ["selCustomer","selRep","selPkg","inpStart","inpMonths","inpEnd","inpSign"].forEach(function(id){ $(id).value=""; });
+    $("selVat").value="included";
     applyCustomer(); applyRep(); applyPackage(); recalcPeriod(); applySign();
   });
 

@@ -90,7 +90,8 @@ function createContract(payload) {
     // 3) 변수 맵 구성 (VariableMapping.gs 참조) ---------------------
     var vars = buildVariableMap({
       contractNo: contractNo, customer: customer, rep: rep,
-      pkg: pkg, start: start, end: end, months: months, sign: sign
+      pkg: pkg, start: start, end: end, months: months, sign: sign,
+      vatMode: payload.vatMode || 'included'   // 'included'(VAT 포함) | 'separate'(VAT 별도)
     });
 
     // 4) Docs 병합 → PDF → Drive 저장 -------------------------------

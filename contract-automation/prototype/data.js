@@ -3,7 +3,7 @@ window.CONTRACT_DB = {
   "packages": [
     {
       "id": "PKG-1M",
-      "name": "1개월",
+      "name": "동네확보 프로젝트",
       "durationMonths": 1,
       "listSupply": 320000,
       "discount": 70000,
@@ -75,7 +75,7 @@ window.CONTRACT_DB = {
     },
     {
       "id": "PKG-3M",
-      "name": "3개월",
+      "name": "동네선점 프로젝트",
       "durationMonths": 3,
       "listSupply": 800000,
       "discount": 50000,
@@ -137,7 +137,7 @@ window.CONTRACT_DB = {
     },
     {
       "id": "PKG-6M",
-      "name": "6개월",
+      "name": "동네점유 프로젝트",
       "durationMonths": 6,
       "listSupply": 1950000,
       "discount": 450000,
@@ -209,7 +209,7 @@ window.CONTRACT_DB = {
     },
     {
       "id": "PKG-12M",
-      "name": "12개월",
+      "name": "동네장악 프로젝트",
       "durationMonths": 12,
       "listSupply": 4500000,
       "discount": 1500000,

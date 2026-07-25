@@ -40,6 +40,9 @@ function buildVariableMap(ctx) {
     '{{패키지할인}}':  (p.discount > 0 ? '− ' + won(p.discount) : won(0)),
     '{{부가세}}':      won(p.vat),
     '{{총계약금액}}':  won(p.total),
+    // 부가세 표기 토글: 'separate'(별도) 이면 라벨 비움(부가세를 별도 줄로 표기),
+    // 그 외(포함)이면 '(VAT 포함)' 라벨을 총계약금액 옆에 표기
+    '{{계약금액라벨}}': (ctx.vatMode === 'separate' ? '' : '(VAT 포함)'),
 
     // --- 기간/날짜 ---
     '{{계약기간}}':    periodLabel(ctx.start, ctx.end, ctx.months),
@@ -57,7 +60,6 @@ function buildVariableMap(ctx) {
     map['{{항목' + i + '_명}}']   = l ? l.item : '';
     map['{{항목' + i + '_세부}}'] = l ? l.desc : '';
     map['{{항목' + i + '_수량}}'] = l ? String(l.qty) : '';
-    map['{{항목' + i + '_개월}}'] = l ? String(l.months) : '';
     map['{{항목' + i + '_단가}}'] = l ? comma(l.unitPrice) : '';
     map['{{항목' + i + '_금액}}'] = l ? comma(l.amount) : '';
   }
