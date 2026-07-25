@@ -1,0 +1,5 @@
+﻿rep_id,name,phone,email,department,active
+REP-01,김수인,010-1234-4567,sikim@connectwise.co.kr,영업팀,TRUE
+REP-02,이민호,010-2222-3456,mhlee@connectwise.co.kr,영업팀,TRUE
+REP-03,박지훈,010-3333-7890,jhpark@connectwise.co.kr,영업2팀,TRUE
+REP-04,정하나,010-4444-1212,hjung@connectwise.co.kr,영업2팀,TRUE

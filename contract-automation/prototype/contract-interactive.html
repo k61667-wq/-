@@ -1,0 +1,461 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>커넥트와이즈 광고 대행 용역 계약서 — 자동 작성</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15171a; --ink-2:#33373d; --ink-3:#5b6068; --line:#9aa0a8; --line-2:#c7ccd2;
+    --hair:#dfe2e6; --fill:#f1f2f4; --fill-2:#f8f9fa; --paper:#ffffff; --bg:#dfe1e5;
+    --brand:#232a33; --brand-2:#3a424c; --brand-tint:#eef0f2; --brand-tint-2:#e3e5e8;
+    --accent:#2f6df6;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    font-family:"Pretendard","Pretendard Variable",system-ui,sans-serif;
+    color:var(--ink); line-height:1.6; -webkit-font-smoothing:antialiased;
+    padding:0 0 90px;
+  }
+  .serif{ font-family:"Noto Serif KR",serif; }
+
+  /* ---------- Control panel (screen only) ---------- */
+  .panel{
+    position:sticky; top:0; z-index:50; background:#1c2229; color:#e9ecf1;
+    border-bottom:3px solid var(--accent); box-shadow:0 8px 30px -18px rgba(0,0,0,.5);
+  }
+  .panel-inner{ max-width:1120px; margin:0 auto; padding:14px 22px; }
+  .panel h2{ font-size:15px; margin:0 0 3px; letter-spacing:.02em; display:flex; align-items:center; gap:8px; }
+  .panel .sub{ font-size:11.5px; color:#9aa6b4; margin:0 0 12px; }
+  .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px 16px; }
+  .fld{ display:flex; flex-direction:column; gap:4px; }
+  .fld label{ font-size:11px; font-weight:600; color:#aeb8c4; letter-spacing:.02em; }
+  .fld select,.fld input{
+    font-family:inherit; font-size:13px; padding:8px 10px; border-radius:7px;
+    border:1px solid #3a444f; background:#252c34; color:#f2f5f8; outline:none;
+  }
+  .fld select:focus,.fld input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(47,109,246,.25); }
+  .fld.span2{ grid-column:span 2; }
+  .actions{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center; }
+  .btn{
+    font-family:inherit; font-size:13px; font-weight:700; padding:9px 18px; border-radius:8px;
+    border:1px solid transparent; cursor:pointer; letter-spacing:.02em;
+  }
+  .btn-primary{ background:var(--accent); color:#fff; }
+  .btn-primary:hover{ background:#245fdc; }
+  .btn-ghost{ background:transparent; color:#cfd6de; border-color:#3a444f; }
+  .btn-ghost:hover{ background:#252c34; }
+  .hint{ font-size:11px; color:#8b96a3; margin-left:auto; }
+  .cno{ font-size:12px; color:#cfd6de; font-weight:600; }
+  .cno b{ color:#fff; font-family:"Noto Serif KR",serif; letter-spacing:.04em; }
+
+  /* ---------- Sheet (matches the company design) ---------- */
+  .page{ width:794px; max-width:100%; margin:26px auto 0; display:flex; flex-direction:column; align-items:center; gap:26px; }
+  .sheet{
+    width:794px; max-width:100%; min-height:1123px; background:var(--paper);
+    box-shadow:0 1px 2px rgba(20,28,44,.05),0 22px 60px -26px rgba(20,28,44,.28);
+    padding:42px 60px; box-sizing:border-box;
+  }
+  .sheet:first-child{ position:relative; }
+  .sheet:first-child::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; background:var(--brand); }
+  .docmeta{ display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--ink-3); letter-spacing:.02em; margin-bottom:26px; }
+  .brand-lockup .logo-text{ font-family:"Noto Serif KR",serif; font-weight:700; font-size:22px; color:var(--brand); letter-spacing:.04em; }
+  .brand-lockup .tag{ font-size:9.5px; font-weight:700; color:var(--brand); letter-spacing:.24em; text-transform:uppercase; margin-top:6px; }
+  .contactbox{ border-collapse:collapse; width:212px; }
+  .contactbox td{ border:.75px solid var(--line); padding:5px 10px; font-size:11px; }
+  .contactbox td.k{ background:var(--brand-tint); font-weight:700; color:var(--brand); width:74px; text-align:center; }
+  .contactbox td.v{ color:var(--ink); }
+  .titleblock{ text-align:center; margin:2px 0 14px; }
+  .titleblock h1{ font-family:"Noto Serif KR",serif; font-weight:700; font-size:26px; letter-spacing:.12em; margin:0; color:var(--ink); }
+  .titleblock .en{ font-size:10px; letter-spacing:.26em; color:var(--ink-3); margin-top:8px; text-transform:uppercase; }
+  .titleblock .double-rule{ margin:12px auto 0; width:100%; height:0; border-top:1.5px solid var(--brand); }
+  .preamble{ font-size:12.5px; color:var(--ink-2); line-height:1.7; margin:0 0 6px; text-align:justify; }
+  .sec{ font-family:"Noto Serif KR",serif; font-weight:700; font-size:14px; color:var(--brand); letter-spacing:.02em; margin:16px 0 8px; padding-bottom:6px; border-bottom:1.5px solid var(--brand); display:flex; align-items:baseline; gap:9px; white-space:nowrap; }
+  table{ width:100%; border-collapse:collapse; }
+  .tbl th,.tbl td{ border:.75px solid var(--line); padding:5px 10px; font-size:11.8px; vertical-align:middle; }
+  .tbl th{ background:var(--brand-tint); font-weight:700; color:var(--brand); text-align:center; }
+  .tbl .lbl{ background:var(--fill); font-weight:600; color:var(--ink-2); text-align:center; width:120px; white-space:nowrap; }
+  .tbl td.cell{ height:24px; color:var(--ink); }
+  .svc td.no{ text-align:center; width:34px; font-weight:700; color:var(--brand); }
+  .svc td.item{ width:104px; font-weight:600; color:var(--ink); }
+  .svc td.desc{ color:var(--ink-2); line-height:1.55; }
+  .svc td.qty{ width:70px; text-align:center; color:var(--ink-3); }
+  .svc td.unit,.svc td.amt{ width:84px; text-align:right; color:var(--ink-3); }
+  .svc tr.zero td{ color:var(--line-2); }
+  .splitrow{ display:flex; gap:0; margin-top:14px; }
+  .splitrow .half{ flex:1; }
+  .kv th,.kv td{ border:.75px solid var(--line); padding:6px 11px; font-size:11.8px; }
+  .kv .k{ background:var(--fill); font-weight:600; color:var(--ink-2); width:118px; }
+  .kv tr.sum .k{ background:var(--brand-tint); color:var(--brand); }
+  .kv tr.sum td{ font-weight:700; color:var(--brand); }
+  .kv tr.disc td.dv{ color:#b02a2a; }
+  .money{ font-variant-numeric:tabular-nums; }
+  .articles{ margin-top:9px; border:.9px solid var(--brand); padding:7px 18px 11px; }
+  .art{ margin:10px 0 0; break-inside:avoid; }
+  .art > .h{ font-weight:700; font-size:13px; color:var(--ink); margin:0 0 5px; }
+  .art > .h .n{ font-family:"Noto Serif KR",serif; margin-right:5px; color:var(--brand); }
+  .art p{ margin:0; font-size:12.2px; color:var(--ink-2); line-height:1.72; text-align:justify; }
+  .art ol{ margin:0; padding:0; list-style:none; }
+  .art ol li{ position:relative; padding:1px 0 1px 21px; font-size:12.2px; color:var(--ink-2); line-height:1.66; text-align:justify; }
+  .art ol li::before{ content:attr(data-n); position:absolute; left:0; top:2px; color:var(--ink); font-weight:600; }
+  .art b{ font-weight:700; color:var(--ink); }
+  .closing{ margin-top:16px; }
+  .closing .stmt{ font-size:12.2px; color:var(--ink-2); text-align:center; line-height:1.6; }
+  .closing .date{ font-family:"Noto Serif KR",serif; text-align:center; font-size:14px; color:var(--ink); letter-spacing:.06em; margin:8px 0 12px; }
+  .sigwrap{ display:flex; gap:34px; }
+  .sig{ flex:1; }
+  .sig .cap{ font-weight:700; font-size:12.5px; color:var(--brand); letter-spacing:.1em; text-align:center; margin-bottom:8px; }
+  .sig td{ border:.75px solid var(--line); padding:9px 11px; font-size:11.6px; }
+  .sig td.k{ background:var(--fill); font-weight:600; color:var(--ink-2); width:74px; text-align:center; }
+  .sig .signline{ display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:10px; font-size:11.6px; color:var(--ink-3); white-space:nowrap; }
+  .sig .signline .seal{ width:42px; height:42px; border:1px dashed var(--line-2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--line); font-size:10px; }
+  .pagefoot{ margin-top:40px; padding-top:12px; border-top:1px solid var(--hair); display:flex; justify-content:space-between; font-size:10px; color:var(--ink-3); }
+  .fill{ color:var(--ink); font-weight:600; }
+  .fill.empty{ color:var(--line-2); font-weight:400; }
+
+  @media print{
+    @page{ size:A4 portrait; margin:0; }
+    html,body{ background:#fff !important; padding:0 !important; margin:0 !important; }
+    .panel{ display:none !important; }
+    .page{ display:block; width:100%; max-width:100%; gap:0; margin:0; }
+    .sheet{ width:100%; max-width:100%; min-height:auto; box-shadow:none; margin:0; padding:14mm 14mm; break-after:page; break-inside:avoid; }
+    .sheet:last-child{ break-after:auto; }
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .art,.sig,.sigwrap,.splitrow,.closing{ break-inside:avoid; }
+    tr,td,th{ break-inside:avoid; }
+    .sec{ break-after:avoid; }
+  }
+  @media (max-width:900px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:680px){
+    .sheet{ width:100%; min-height:auto; padding:30px 22px; }
+    .splitrow,.sigwrap{ flex-direction:column; gap:14px; }
+    .grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =============== CONTROL PANEL (screen only) =============== -->
+<div class="panel">
+  <div class="panel-inner">
+    <h2>📄 계약서 자동 작성 <span style="font-size:11px;font-weight:500;color:#8b96a3">CONNECTWISE</span></h2>
+    <p class="sub">고객 · 담당자 · 패키지 · 날짜만 선택하면 수량·단가·금액·공급가액·부가세·계약금액이 자동 계산됩니다. (예시 데이터 — 실제 값으로 교체)</p>
+    <div class="grid">
+      <div class="fld span2">
+        <label>고객사 선택 (DB 자동입력)</label>
+        <select id="selCustomer"><option value="">— 직접 입력 —</option></select>
+      </div>
+      <div class="fld">
+        <label>영업 담당자</label>
+        <select id="selRep"><option value="">— 선택 —</option></select>
+      </div>
+      <div class="fld">
+        <label>서비스 패키지</label>
+        <select id="selPkg"><option value="">— 선택 —</option></select>
+      </div>
+      <div class="fld">
+        <label>계약 시작일</label>
+        <input type="date" id="inpStart">
+      </div>
+      <div class="fld">
+        <label>계약 기간 (개월)</label>
+        <input type="number" id="inpMonths" min="1" max="60" step="1" placeholder="패키지 기본값">
+      </div>
+      <div class="fld">
+        <label>계약 종료일 (자동)</label>
+        <input type="date" id="inpEnd" readonly>
+      </div>
+      <div class="fld">
+        <label>계약 체결일</label>
+        <input type="date" id="inpSign">
+      </div>
+    </div>
+    <div class="actions">
+      <span class="cno">계약번호 <b id="cnoView">—</b></span>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>
+      <button class="btn btn-ghost" id="btnReset">초기화</button>
+      <span class="hint">＊ 실제 배포 시 이 화면은 Google Sheets 사이드바 → Docs·PDF·Drive 자동 저장으로 대체됩니다.</span>
+    </div>
+  </div>
+</div>
+
+<!-- =============== CONTRACT DOCUMENT =============== -->
+<article class="page">
+  <!-- Page 1 -->
+  <section class="sheet">
+    <div class="docmeta">
+      <div class="brand-lockup">
+        <div class="logo-text">CONNECT WISE</div>
+        <div class="tag">커넥트와이즈</div>
+      </div>
+      <table class="contactbox"><tbody>
+        <tr><td class="k">담당 부서</td><td class="v"><span id="fDept" class="fill empty">영업팀</span></td></tr>
+        <tr><td class="k">담당자</td><td class="v"><span id="fRepName" class="fill empty">—</span></td></tr>
+        <tr><td class="k">연락처</td><td class="v"><span id="fRepPhone" class="fill empty">—</span></td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="titleblock">
+      <h1 class="serif">커넥트와이즈 광고 대행 용역 계약서</h1>
+      <div class="en">Marketing Service Agreement</div>
+      <div class="double-rule"></div>
+    </div>
+
+    <p class="preamble">광고주(이하 "갑"이라 한다)와(과) 대행사 주식회사 커넥트와이즈(이하 "을"이라 한다)은(는), "갑"이 "을"에게 위탁하는 광고대행 용역에 관하여 상호 신의성실의 원칙에 따라 다음과 같이 계약을 체결한다.</p>
+
+    <div class="sec"><span class="rn serif">Ⅰ.</span><span>당사자의 표시</span></div>
+    <table class="tbl" style="table-layout:fixed">
+      <colgroup><col style="width:118px"><col><col style="width:118px"><col></colgroup>
+      <tbody>
+        <tr><th>구 분</th><th>갑 (광고주)</th><th>구 분</th><th>을 (커넥트와이즈)</th></tr>
+        <tr><td class="lbl">상 호 명</td><td class="cell"><span id="cCompany" class="fill empty"></span></td><td class="lbl">상 호 명</td><td class="cell">주식회사 커넥트와이즈</td></tr>
+        <tr><td class="lbl">대 표 자</td><td class="cell"><span id="cCeo" class="fill empty"></span></td><td class="lbl">대 표 자</td><td class="cell">임민규</td></tr>
+        <tr><td class="lbl">사업자등록번호</td><td class="cell"><span id="cBizNo" class="fill empty"></span></td><td class="lbl">사업자등록번호</td><td class="cell">234-87-03014</td></tr>
+        <tr><td class="lbl">소 재 지</td><td class="cell"><span id="cAddr" class="fill empty"></span></td><td class="lbl">소 재 지</td><td class="cell">경기도 고양시 덕양구 지축1로 39, 5층 502호</td></tr>
+        <tr><td class="lbl">연 락 처</td><td class="cell"><span id="cPhone" class="fill empty"></span></td><td class="lbl">연 락 처</td><td class="cell">010-9394-9953</td></tr>
+        <tr><td class="lbl">전자우편</td><td class="cell"><span id="cEmail" class="fill empty"></span></td><td class="lbl">전자우편</td><td class="cell"><span id="fRepEmail" class="fill empty"></span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="sec"><span class="rn serif">Ⅱ.</span><span>용역의 내용 및 대가</span>
+      <span style="font-family:Pretendard;font-weight:600;font-size:11px;color:var(--ink-3);margin-left:auto" id="pkgBadge"></span>
+    </div>
+    <table class="tbl svc">
+      <thead>
+        <tr><th style="width:34px">No</th><th style="width:104px">용역 항목</th><th>세부 내용</th><th style="width:70px">수량·기준</th><th style="width:84px">단가</th><th style="width:84px">금액</th></tr>
+      </thead>
+      <tbody id="svcBody"><!-- rows injected --></tbody>
+    </table>
+
+    <div class="splitrow">
+      <div class="half">
+        <table class="kv">
+          <colgroup><col style="width:118px"><col></colgroup>
+          <tbody>
+            <tr><td class="k">총 공급가액</td><td class="money"><span id="tSupply" class="fill empty"></span></td></tr>
+            <tr class="disc"><td class="k">패키지 할인</td><td class="money"><span id="tDisc" class="dv fill empty"></span></td></tr>
+            <tr><td class="k">부가세 (VAT)</td><td class="money"><span id="tVat" class="fill empty"></span></td></tr>
+            <tr class="sum"><td class="k" style="width:127px">총 계약금액</td><td class="money" style="width:auto"><span id="tTotal" class="fill empty">￦</span> <span style="font-weight:400;font-size:10.5px;color:var(--ink-3)">(VAT 포함)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="half">
+        <table class="kv">
+          <colgroup><col style="width:96px"><col></colgroup>
+          <tbody>
+            <tr><td class="k">계약기간</td><td><span id="tPeriod" class="fill empty">—</span></td></tr>
+            <tr><td class="k">구비서류</td><td>사업자등록증 사본 1부</td></tr>
+            <tr><td class="k">입금계좌</td><td style="width:263px">카카오뱅크 3333-3032-94626 / 유병헌</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Page 2 -->
+  <section class="sheet">
+    <div class="sec"><span class="rn serif">Ⅲ.</span><span>계약 조항</span></div>
+    <div class="articles">
+      <div class="art"><p class="h"><span class="n">제 1 조</span>(목적)</p><p>본 계약은 광고를 의뢰하는 광고주(이하 "갑")가 대행사 주식회사 커넥트와이즈(이하 "을")에게 온·오프라인 광고 대행 용역을 위탁함에 있어, 당사자 간의 권리·의무 및 책임사항을 정함을 목적으로 한다.</p></div>
+      <div class="art"><p class="h"><span class="n">제 2 조</span>(정의 및 기본 보증)</p><ol>
+        <li data-n="①"><b>"광고 대행 용역"</b>이라 함은 "갑"의 사업 노출 제고를 위하여 관계 법령 및 각 매체사의 운영정책을 준수하는 범위 내에서 SEO 최적화, 매체사 공식 광고 상품의 집행, 콘텐츠 제작·게시 등을 수행하는 일체의 용역을 말한다.</li>
+        <li data-n="②">"을"은 본 계약서에 기재된 자사의 사업자 정보 및 자격이 진실함을 보증하며, 위 보증이 허위인 경우 그로 인하여 발생한 "갑"의 손해를 배상한다.</li></ol></div>
+      <div class="art"><p class="h"><span class="n">제 3 조</span>(계약의 성립 및 자료의 제공)</p><ol>
+        <li data-n="①">본 계약은 "갑"이 "을"에게 마케팅 대행 용역을 위탁하고 "을"이 이를 승낙하여 본 계약서에 서명 또는 날인함으로써 성립함을 원칙으로 하되, 당사자가 서면 또는 전자적 방법으로 계약체결의 의사를 표시하는 것으로 이를 갈음할 수 있다.</li>
+        <li data-n="②">"갑"은 "을"에게 광고·콘텐츠 제작에 필요한 키워드, 사진 등 구체적 자료를 제공하여야 하며, "갑"의 고의 또는 과실로 적시에 자료를 제공하지 못하여 발생하는 손해는 "갑"이 부담한다.</li>
+        <li data-n="③">"을"이 용역 수행을 위하여 관련 법령상의 등록증 등 필요서류 및 협조사항을 요청하는 경우 "갑"은 이에 성실히 응하여야 하며, "갑"의 고의 또는 과실로 적시에 협조하지 못하여 발생하는 손해는 "갑"이 부담한다.</li>
+        <li data-n="④">"을"은 "갑"의 노출 제고를 위하여 광고의 작성·게재 및 관리업무를 성실히 수행하며, 광고와 관련한 정책은 각 매체사의 정책을 우선하여 반영함을 원칙으로 한다.</li></ol></div>
+      <div class="art"><p class="h"><span class="n">제 4 조</span>(용역의 제공 및 변경)</p><ol>
+        <li data-n="①">"갑"이 용역 내용을 변경하고자 하는 경우 이를 "을"에게 서면으로 통지하여야 한다.</li>
+        <li data-n="②">당사자 간에 할인 또는 무상으로 지원되는 용역은 본 계약 체결 시 정한 계약기간이 만료로 정상 종료되는 것을 전제로 지원되는 것으로, 계약기간 만료 이전에 "갑"이 단순변심 또는 주관적 평가에 기한 사유로 임의로 해지한 경우 제6조 제2항에 따라 정산할 수 있다.</li>
+        <li data-n="③">"을"의 구체적 광고 집행 방법 및 내용은 현행 법령 및 각 매체사의 정책에 따라 이루어지며, "을"은 법령 및 매체사 정책의 변동으로 인한 노출 결과의 변동에 대하여 법적 책임을 부담하지 아니한다.</li>
+        <li data-n="④">용역 제공 중 천재지변, 노출 방해, 중복 과금, 악성코드 등 비정상적 변동 또는 불가항력에 의한 사유가 있는 경우, 광고 보호 조치 차원에서 노출이 일시적으로 중단될 수 있다.</li>
+        <li data-n="⑤">"을"의 콘텐츠 게시 용역은 대가성 표시 등 관계 법령을 준수하여 자사 또는 제휴 채널에 게시하며, 게시 수량 및 주기는 제Ⅱ항 용역의 내용에 정한 기준에 따른다.</li></ol></div>
+      <div class="art"><p class="h"><span class="n">제 5 조</span>(성과에 관한 사항)</p><ol>
+        <li data-n="①">본 계약은 특정 또는 고정적 플레이스 순위를 보장하지 않는다.</li>
+        <li data-n="②">"갑"이 제3조 제2항에 따라 계약기간의 3/4 이상 자료 제공의무를 이행하였음에도 불구하고 서비스 개시 시부터 만료 시까지 플레이스 순위를 비교하여 본 계약기간 동안 "갑"의 순위가 오르지 않았을 경우, "을"은 순위가 오를 때까지 1개월 단위로 서비스 연장을 보장하기로 하며, 동 서비스 연장으로 인한 광고비용을 부담한다. 다만 위 서비스 연장의 최대 기한은 3개월로 한다.</li></ol></div>
+    </div>
+  </section>
+
+  <!-- Page 3 -->
+  <section class="sheet">
+    <div class="articles">
+      <div class="art"><p class="h"><span class="n">제 6 조</span>(계약의 해제·해지 및 정산)</p><ol>
+        <li data-n="①">"갑" 또는 "을"은 상대방이 계약상 의무를 이행하지 아니하는 경우 상당한 기간을 정하여 이행을 최고하고, 그 기간 내에 이행되지 아니하는 때에는 본 계약을 해제 또는 해지할 수 있다.</li>
+        <li data-n="②">"갑"이 임의로 본 계약을 해제·해지한 경우, "을"은 이미 진행한 항목에 관한 서비스 비용 전액 및 미진행 항목에 관한 비용의 10%(위약금)을 공제한 후 잔액을 환불할 수 있다. 이때 서비스 비용 및 항목별 공제 기준은 제Ⅱ항 「용역의 내용 및 대가」에서 패키지 할인을 적용하여 결정한 계약금액이 아닌, 제Ⅱ항에 기재된 항목별 단가를 기준으로 산정한다.</li>
+        <li data-n="③">"갑"의 자료 미제공 등 귀책사유로 인하여 "을"이 이행하지 못한 서비스는 정상 이행된 것으로 간주하여 산정한다.</li></ol></div>
+      <div class="art"><p class="h"><span class="n">제 7 조</span>(개인정보의 수집·이용)</p><ol>
+        <li data-n="①">"을"은 제1조의 목적을 위하여 "갑"의 개인정보를 수집·이용할 수 있으며, 서면·전화·온라인을 통하여 동의 여부를 선택할 수 있는 절차를 마련하고 "갑"이 이에 동의한 경우에 한하여 수집·이용한다.</li>
+        <li data-n="②">"을"은 관계 법령에 의한 국가기관 등의 요청이 있는 경우를 제외하고는 "갑"의 개인정보를 본인의 동의 없이 제3자에게 제공하지 아니한다.</li>
+        <li data-n="③">"갑"은 개인정보의 수집·이용에 동의하지 아니할 권리가 있으며, 동의하지 아니하는 경우 "을"이 제공하는 용역의 일부가 제한될 수 있다.</li>
+        <li data-n="④">"을"은 "갑"의 귀책사유로 개인정보가 유출되어 발생한 피해에 대하여 책임을 부담하지 아니한다.</li>
+        <li data-n="⑤">"갑"은 콘텐츠 제작·게시 등 용역 수행에 필요한 범위에서 매체 계정의 접근 권한을 "을"과 공유할 수 있으며, "을"은 해당 계정을 본 계약상 목적 외의 다른 목적으로 활용하지 아니한다.</li></ol></div>
+      <div class="art"><p class="h"><span class="n">제 8 조</span>(실적의 활용)</p><p>본 계약 체결일 이후 "갑"에 관한 온·오프라인 광고 대행물 또는 성공사례는, "갑"이 별도의 거부 의사를 표시하지 아니하는 한 "을"이 자사의 실적 및 홍보 목적으로 활용할 수 있다.</p></div>
+      <div class="art"><p class="h"><span class="n">제 9 조</span>(분쟁의 해결 및 관할)</p><ol>
+        <li data-n="①">본 계약과 관련하여 발생하는 분쟁은 온라인광고분쟁조정위원회의 조정 규칙에 따라 해결함을 원칙으로 한다.</li>
+        <li data-n="②">전항의 조정에 의하지 아니하고 소송으로 진행하는 경우, 그 전속적 관할법원은 서울중앙지방법원으로 한다.</li></ol></div>
+      <div class="art"><p class="h"><span class="n">제 10 조</span>(기타)</p><ol>
+        <li data-n="①">본 계약에 정하지 아니한 사항은 관계 법령 및 일반 상관례에 따르며, 해석상 이견이 있는 경우 당사자가 상호 협의하여 정한다.</li>
+        <li data-n="②">본 계약의 변경은 당사자가 서명 또는 날인한 서면 합의에 의하여만 효력이 발생한다.</li></ol></div>
+    </div>
+
+    <div class="closing">
+      <p class="stmt">본 계약의 성립을 증명하기 위하여 계약서 2부를 작성하고, "갑"과 "을"이 각각 서명·날인한 후 각 1부씩 보관한다.</p>
+      <p class="date serif">계약체결일 <span id="tSign">20&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;.</span></p>
+      <div class="sigwrap">
+        <div class="sig">
+          <div class="cap">갑 (광고주)</div>
+          <table><tbody>
+            <tr><td class="k">상 호</td><td class="v"><span id="sCompany" class="fill empty"></span></td></tr>
+            <tr><td class="k">대표자</td><td class="v"><span id="sCeo" class="fill empty"></span></td></tr>
+            <tr><td class="k">소재지</td><td class="v"><span id="sAddr" class="fill empty"></span></td></tr>
+          </tbody></table>
+          <div class="signline"><span>대표자&nbsp;&nbsp;______________</span><span class="seal">(인)</span></div>
+        </div>
+        <div class="sig">
+          <div class="cap">을 (커넥트와이즈)</div>
+          <table><tbody>
+            <tr><td class="k">상 호</td><td class="v">주식회사 커넥트와이즈</td></tr>
+            <tr><td class="k">대표자</td><td class="v">임민규</td></tr>
+            <tr><td class="k">소재지</td><td class="v">경기도 고양시 덕양구 지축1로 39, 5층 502호</td></tr>
+          </tbody></table>
+          <div class="signline"><span>대표자&nbsp;&nbsp;______________</span><span class="seal">(인)</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="pagefoot"><span>CONNECTWISE · 주식회사 커넥트와이즈</span><span id="footCno">광고 대행 용역 계약서</span></div>
+  </section>
+</article>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  var DB = window.CONTRACT_DB;
+  var $ = function(id){ return document.getElementById(id); };
+  var won = function(n){ return "￦" + (n||0).toLocaleString("ko-KR"); };
+  var pad = function(n){ return (n<10?"0":"")+n; };
+
+  // ---- populate dropdowns ----
+  DB.customers.forEach(function(c){ var o=document.createElement("option"); o.value=c.id; o.textContent=c.company+" ("+c.ceo+")"; $("selCustomer").appendChild(o); });
+  DB.reps.forEach(function(r){ var o=document.createElement("option"); o.value=r.id; o.textContent=r.name+"  ("+r.phone+")"; $("selRep").appendChild(o); });
+  DB.packages.forEach(function(p){ var o=document.createElement("option"); o.value=p.id; o.textContent=p.name+"  ·  "+p.durationMonths+"개월  ·  "+won(p.contractTotal); $("selPkg").appendChild(o); });
+
+  // ---- build 8 service rows (from master item list) ----
+  var body = $("svcBody");
+  DB.items.forEach(function(it, i){
+    var tr=document.createElement("tr"); tr.dataset.key=it.key;
+    tr.innerHTML =
+      '<td class="no">'+(i+1)+'</td>'+
+      '<td class="item">'+it.item+'</td>'+
+      '<td class="desc">'+it.desc+'</td>'+
+      '<td class="qty" data-f="qty"></td>'+
+      '<td class="unit money" data-f="unit"></td>'+
+      '<td class="amt money" data-f="amt"></td>';
+    body.appendChild(tr);
+  });
+
+  function setFill(id, val){
+    var el=$(id); if(!el) return;
+    if(val===undefined||val===null||val===""){ el.textContent=""; el.classList.add("empty"); }
+    else { el.textContent=val; el.classList.remove("empty"); }
+  }
+
+  // ---- customer ----
+  function applyCustomer(){
+    var c = DB.customers.filter(function(x){return x.id===$("selCustomer").value;})[0];
+    var v = c || {company:"",ceo:"",bizNo:"",address:"",phone:"",email:""};
+    setFill("cCompany",v.company); setFill("cCeo",v.ceo); setFill("cBizNo",v.bizNo);
+    setFill("cAddr",v.address);   setFill("cPhone",v.phone); setFill("cEmail",v.email);
+    setFill("sCompany",v.company); setFill("sCeo",v.ceo); setFill("sAddr",v.address);
+  }
+
+  // ---- rep ----
+  function applyRep(){
+    var r = DB.reps.filter(function(x){return x.id===$("selRep").value;})[0];
+    setFill("fDept", r?r.dept:"영업팀");
+    setFill("fRepName", r?r.name:"");
+    setFill("fRepPhone", r?r.phone:"");
+    setFill("fRepEmail", r?r.email:"");
+  }
+
+  // ---- package → fill table + totals ----
+  function applyPackage(){
+    var p = DB.packages.filter(function(x){return x.id===$("selPkg").value;})[0];
+    $("pkgBadge").textContent = p ? "선택 패키지: "+p.name : "";
+    // reset months placeholder to package default when a package is chosen and months empty
+    var rows = body.querySelectorAll("tr");
+    rows.forEach(function(tr){
+      var line = p ? p.lines.filter(function(l){return l.key===tr.dataset.key;})[0] : null;
+      var q=tr.querySelector('[data-f=qty]'), u=tr.querySelector('[data-f=unit]'), a=tr.querySelector('[data-f=amt]');
+      if(line && line.qty>0){
+        q.textContent=line.qty+" "+line.unit; u.textContent=won(line.unitPrice); a.textContent=won(line.amount);
+        tr.classList.remove("zero");
+      } else if(line){ // included item but qty 0 for this tier
+        q.textContent="-"; u.textContent="-"; a.textContent="-"; tr.classList.add("zero");
+      } else { q.textContent=""; u.textContent=""; a.textContent=""; tr.classList.remove("zero"); }
+    });
+    if(p){
+      setFill("tSupply", won(p.listSupply));
+      setFill("tDisc", p.discount>0 ? "− "+won(p.discount) : won(0));
+      setFill("tVat", won(p.vat));
+      setFill("tTotal", won(p.contractTotal));
+      if(!$("inpMonths").value) $("inpMonths").value = p.durationMonths;
+    } else {
+      ["tSupply","tDisc","tVat","tTotal"].forEach(function(id){ setFill(id,""); });
+    }
+    recalcPeriod();
+  }
+
+  // ---- dates ----
+  function fmtDot(d){ return d.getFullYear()+"."+pad(d.getMonth()+1)+"."+pad(d.getDate()); }
+  function recalcPeriod(){
+    var s=$("inpStart").value, m=parseInt($("inpMonths").value,10);
+    if(s && m>0){
+      var sd=new Date(s+"T00:00:00");
+      var ed=new Date(sd); ed.setMonth(ed.getMonth()+m); ed.setDate(ed.getDate()-1);
+      $("inpEnd").value = ed.getFullYear()+"-"+pad(ed.getMonth()+1)+"-"+pad(ed.getDate());
+      setFill("tPeriod", fmtDot(sd)+" ~ "+fmtDot(ed)+"  ("+m+"개월)");
+    } else if(s){
+      var sd2=new Date(s+"T00:00:00"); setFill("tPeriod", fmtDot(sd2)+" 부터");
+      $("inpEnd").value="";
+    } else { setFill("tPeriod",""); $("inpEnd").value=""; }
+  }
+  function applySign(){
+    var s=$("inpSign").value;
+    if(s){ var d=new Date(s+"T00:00:00"); $("tSign").textContent = d.getFullYear()+"년 "+(d.getMonth()+1)+"월 "+d.getDate()+"일"; }
+    else { $("tSign").innerHTML="20&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;."; }
+    genContractNo();
+  }
+
+  // ---- contract number: CW-YYYYMMDD-#### (based on sign date or today) ----
+  function genContractNo(){
+    var base = $("inpSign").value || $("inpStart").value;
+    var d = base ? new Date(base+"T00:00:00") : null;
+    var cust = $("selCustomer").value ? $("selCustomer").value.replace("CUS-","") : "0000";
+    if(d){
+      var no = "CW-"+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+cust;
+      $("cnoView").textContent=no; $("footCno").textContent=no;
+    } else { $("cnoView").textContent="— (날짜 선택 시 생성)"; $("footCno").textContent="광고 대행 용역 계약서"; }
+  }
+
+  // ---- wire events ----
+  $("selCustomer").addEventListener("change", function(){ applyCustomer(); genContractNo(); });
+  $("selRep").addEventListener("change", applyRep);
+  $("selPkg").addEventListener("change", applyPackage);
+  $("inpStart").addEventListener("change", function(){ recalcPeriod(); genContractNo(); });
+  $("inpMonths").addEventListener("input", recalcPeriod);
+  $("inpSign").addEventListener("change", applySign);
+  $("btnReset").addEventListener("click", function(){
+    ["selCustomer","selRep","selPkg","inpStart","inpMonths","inpEnd","inpSign"].forEach(function(id){ $(id).value=""; });
+    applyCustomer(); applyRep(); applyPackage(); recalcPeriod(); applySign();
+  });
+
+  // ---- default sign date = today ----
+  (function(){ var t=new Date(); $("inpSign").value=t.getFullYear()+"-"+pad(t.getMonth()+1)+"-"+pad(t.getDate()); })();
+  applyCustomer(); applyRep(); applyPackage(); applySign();
+})();
+</script>
+</body></html>

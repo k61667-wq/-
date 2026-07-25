@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  :root{ --accent:#2f6df6; --ink:#1c2229; --line:#d7dbe0; --muted:#6b7280; }
+  *{ box-sizing:border-box; }
+  body{ font-family:-apple-system,"Pretendard","Malgun Gothic",sans-serif; margin:0; padding:14px; color:var(--ink); font-size:13px; }
+  h3{ margin:0 0 2px; font-size:15px; }
+  .sub{ color:var(--muted); font-size:11.5px; margin:0 0 14px; }
+  label{ display:block; font-weight:600; font-size:11.5px; margin:12px 0 4px; color:#374151; }
+  select,input{ width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:7px; font-size:13px; font-family:inherit; }
+  select:focus,input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(47,109,246,.15); }
+  .row{ display:flex; gap:8px; }
+  .row > div{ flex:1; }
+  .preview{ margin-top:14px; border:1px solid var(--line); border-radius:9px; overflow:hidden; display:none; }
+  .preview.on{ display:block; }
+  .preview .hd{ background:#f4f6f8; padding:7px 10px; font-weight:700; font-size:12px; }
+  table{ width:100%; border-collapse:collapse; font-size:11px; }
+  td{ padding:4px 8px; border-top:1px solid #eef0f2; }
+  td.r{ text-align:right; font-variant-numeric:tabular-nums; }
+  .tot{ display:flex; justify-content:space-between; padding:5px 10px; font-size:11.5px; }
+  .tot.sum{ font-weight:800; color:var(--accent); border-top:1px dashed var(--line); }
+  .tot .disc{ color:#c0392b; }
+  button{ width:100%; margin-top:16px; padding:11px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+  button:disabled{ opacity:.5; cursor:not-allowed; }
+  .ck{ display:flex; align-items:center; gap:7px; margin-top:12px; font-size:12px; }
+  .ck input{ width:auto; }
+  .result{ margin-top:14px; padding:11px; border-radius:8px; font-size:12px; display:none; }
+  .result.ok{ display:block; background:#eafaf0; border:1px solid #b7e4c7; }
+  .result.err{ display:block; background:#fdecea; border:1px solid #f5c6cb; color:#a12; }
+  .result a{ color:var(--accent); display:block; margin-top:4px; }
+  .spin{ display:inline-block; width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <h3>📄 계약서 자동 작성</h3>
+  <p class="sub">4가지만 선택하면 3분 안에 계약서가 생성됩니다.</p>
+
+  <label>① 고객사</label>
+  <select id="cust"><option value="">— 선택 —</option></select>
+
+  <label>② 영업 담당자</label>
+  <select id="rep"><option value="">— 선택 —</option></select>
+
+  <label>③ 서비스 패키지</label>
+  <select id="pkg"><option value="">— 선택 —</option></select>
+
+  <div class="row">
+    <div><label>④ 계약 시작일</label><input type="date" id="start"></div>
+    <div><label>기간(개월)</label><input type="number" id="months" min="1" max="60" placeholder="자동"></div>
+  </div>
+  <label>계약 체결일</label>
+  <input type="date" id="sign">
+
+  <div class="preview" id="pv">
+    <div class="hd" id="pvName">패키지 미리보기</div>
+    <table id="pvTbl"></table>
+    <div class="tot"><span>총 공급가액</span><span id="pvSupply"></span></div>
+    <div class="tot"><span>패키지 할인</span><span class="disc" id="pvDisc"></span></div>
+    <div class="tot"><span>부가세(VAT)</span><span id="pvVat"></span></div>
+    <div class="tot sum"><span>총 계약금액</span><span id="pvTotal"></span></div>
+  </div>
+
+  <div class="ck"><input type="checkbox" id="email"><label for="email" style="margin:0;font-weight:500">생성 후 고객 이메일로 자동 발송</label></div>
+
+  <button id="go" disabled>계약서 생성</button>
+  <div class="result" id="res"></div>
+
+<script>
+  var DATA = null;
+  var $ = function(id){ return document.getElementById(id); };
+  var won = function(n){ return '￦' + Number(n||0).toLocaleString('en-US'); };
+
+  function fillSelect(sel, arr, fmt){
+    arr.forEach(function(x){ var o=document.createElement('option'); o.value=x.id; o.textContent=fmt(x); sel.appendChild(o); });
+  }
+
+  // 초기 데이터 로드
+  google.script.run.withSuccessHandler(function(d){
+    DATA = d;
+    fillSelect($('cust'), d.customers, function(c){ return c.company+' ('+c.ceo+')'; });
+    fillSelect($('rep'),  d.reps,      function(r){ return r.name+'  ·  '+r.phone; });
+    fillSelect($('pkg'),  d.packages,  function(p){ return p.name+'  ·  '+p.duration+'개월  ·  '+won(p.total); });
+  }).withFailureHandler(showErr).getFormData();
+
+  // 오늘 = 체결일 기본값
+  (function(){ var t=new Date(); var s=t.toISOString().slice(0,10); $('sign').value=s; })();
+
+  // 패키지 미리보기
+  $('pkg').addEventListener('change', function(){
+    var id=this.value; if(!id){ $('pv').classList.remove('on'); return; }
+    google.script.run.withSuccessHandler(function(p){
+      $('pvName').textContent = p.name+' 패키지 · '+p.duration+'개월';
+      var rows = p.lines.map(function(l){
+        return '<tr style="'+(l.on?'':'color:#b0b6bd')+'"><td>'+l.item+'</td><td class="r">'+l.spec+'</td><td class="r">'+(l.on?Number(l.amount).toLocaleString('en-US'):'-')+'</td></tr>';
+      }).join('');
+      $('pvTbl').innerHTML = rows;
+      $('pvSupply').textContent = won(p.supply);
+      $('pvDisc').textContent   = p.discount>0 ? '− '+won(p.discount) : won(0);
+      $('pvVat').textContent    = won(p.vat);
+      $('pvTotal').textContent  = won(p.total);
+      $('pv').classList.add('on');
+      if(!$('months').value) $('months').value = p.duration;
+      validate();
+    }).withFailureHandler(showErr).previewPackage(id);
+  });
+
+  ['cust','rep','pkg','start','sign'].forEach(function(id){ $(id).addEventListener('change', validate); });
+
+  function validate(){
+    var ok = $('rep').value && $('pkg').value && $('start').value && $('sign').value;
+    $('go').disabled = !ok;
+  }
+
+  $('go').addEventListener('click', function(){
+    $('go').disabled=true; $('go').innerHTML='<span class="spin"></span>생성 중...';
+    $('res').className='result';
+    var payload = {
+      customerId: $('cust').value, repId: $('rep').value, packageId: $('pkg').value,
+      startDate: $('start').value, months: $('months').value, signDate: $('sign').value,
+      sendEmail: $('email').checked
+    };
+    google.script.run.withSuccessHandler(function(r){
+      $('go').disabled=false; $('go').textContent='계약서 생성';
+      if(r.ok){
+        $('res').className='result ok';
+        $('res').innerHTML = '✅ '+r.message+' <b>'+r.contractNo+'</b>'
+          + '<a href="'+r.pdfUrl+'" target="_blank">📄 PDF 열기</a>'
+          + '<a href="'+r.docUrl+'" target="_blank">📝 Docs 열기</a>'
+          + '<a href="'+r.folderUrl+'" target="_blank">📁 저장 폴더</a>';
+      } else { showErr({message:r.message}); }
+    }).withFailureHandler(function(e){
+      $('go').disabled=false; $('go').textContent='계약서 생성'; showErr(e);
+    }).createContract(payload);
+  });
+
+  function showErr(e){ $('res').className='result err'; $('res').textContent='⚠ '+(e.message||e); }
+</script>
+</body>
+</html>
