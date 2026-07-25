@@ -51,8 +51,8 @@ function previewPackage(packageId) {
   return {
     name: c.name, duration: c.durationMonths,
     lines: c.lines.map(function (l) {
-      return { item: l.item, spec: (l.qty > 0 ? l.qty + ' ' + l.unit : '-'),
-               unit: l.unitPrice, amount: l.amount, on: l.qty > 0 };
+      return { no: l.no, item: l.item, qty: l.qty, months: l.months,
+               unit: l.unitPrice, amount: l.amount };
     }),
     supply: c.supply, discount: c.discount, vat: c.vat, total: c.total
   };

@@ -10,7 +10,7 @@ function initSheets() {
   var defs = {
     'SalesReps':    ['rep_id','name','phone','email','department','active'],
     'Packages':     ['package_id','package_name','duration_months','list_supply','discount','net_supply','vat','contract_total','active'],
-    'PackageItems': ['package_id','package_name','item_name','spec','qty','unit','unit_price','amount','description'],
+    'PackageItems': ['package_id','package_name','line_no','item_name','description','qty','unit','months','unit_price','amount'],
     'Customers':    ['customer_id','company','ceo','biz_no','address','phone','email'],
     'Contracts':    ['contract_no','created_at','customer_id','company','rep_id','rep_name','package_id','package_name','supply','discount','vat','total','start_date','end_date','sign_date','status','pdf_url','doc_url']
   };

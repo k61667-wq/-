@@ -94,7 +94,7 @@
     google.script.run.withSuccessHandler(function(p){
       $('pvName').textContent = p.name+' 패키지 · '+p.duration+'개월';
       var rows = p.lines.map(function(l){
-        return '<tr style="'+(l.on?'':'color:#b0b6bd')+'"><td>'+l.item+'</td><td class="r">'+l.spec+'</td><td class="r">'+(l.on?Number(l.amount).toLocaleString('en-US'):'-')+'</td></tr>';
+        return '<tr><td>'+l.item+'</td><td class="r">'+l.qty+'개</td><td class="r">'+Number(l.amount).toLocaleString('en-US')+'</td></tr>';
       }).join('');
       $('pvTbl').innerHTML = rows;
       $('pvSupply').textContent = won(p.supply);

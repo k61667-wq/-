@@ -1,15 +1,24 @@
 # 시드 데이터 (Google Sheets 5개 탭)
 
-각 CSV 를 동일 이름의 시트 탭에 붙여넣으세요. **모든 숫자는 예시** — 실제 값으로 교체하세요.
-(`build_data.py` 로 재생성 가능. CSV 와 `prototype/data.js` 숫자가 항상 일치합니다.)
+각 CSV 를 동일 이름의 시트 탭에 붙여넣으세요.
+**담당자 13명과 패키지 4종(1·3·6·12개월)은 사장님이 주신 실데이터**로 채워져 있고,
+고객(Customers)만 예시입니다. (`build_data.py` 로 재생성 가능 — CSV 와 `prototype/data.js` 항상 일치)
 
-| 파일 | 탭 | 교체 대상 |
+| 파일 | 탭 | 상태 |
 |---|---|---|
-| `SalesReps.csv` | SalesReps | 담당자 이름·연락처·이메일 |
-| `Packages.csv` | Packages | 4개 패키지의 기간·할인 (net/vat/total 은 비워도 자동) |
-| `PackageItems.csv` | PackageItems | **가장 중요** — 항목별 수량·단가 |
-| `Customers.csv` | Customers | 자주 계약하는 고객(선택) |
+| `SalesReps.csv` | SalesReps | ✅ 실데이터(13명). 이메일만 미제공(빈칸) |
+| `Packages.csv` | Packages | ✅ 실데이터(4종). net/vat/total 은 비워도 자동 계산 |
+| `PackageItems.csv` | PackageItems | ✅ 실데이터. 패키지별 항목·수량·단가(항목마다 상이) |
+| `Customers.csv` | Customers | ⚠️ 예시 2건 — 실제 고객 DB로 교체(선택) |
 | `Contracts.csv` | Contracts | 헤더만 — 생성 이력이 자동 append |
+
+## 패키지 요약 (견적표와 원 단위 일치)
+| 패키지 | 기간 | 항목수 | 공급가액 | 할인 | 계약금액(VAT포함) |
+|---|---|---|---:|---:|---:|
+| 1개월 | 1 | 6 | 320,000 | 70,000 | **275,000** |
+| 3개월 | 3 | 5 | 800,000 | 50,000 | **825,000** |
+| 6개월 | 6 | 6 | 1,950,000 | 450,000 | **1,650,000** |
+| 12개월 | 12 | 6 | 4,500,000 | 1,500,000 | **3,300,000** |
 
 ## 회계 규칙
 ```

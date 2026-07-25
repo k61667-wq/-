@@ -31,6 +31,7 @@ function generateDocuments(contractNo, customer, pkg, startDate, vars) {
     var val = vars[key] == null ? '' : String(vars[key]);
     sections.forEach(function (sec) { sec.replaceText(escapeRegex(key), val); });
   });
+  trimEmptyServiceRows(body);   // 패키지별 항목 수 차이 → 빈 줄 제거
   doc.saveAndClose();
 
   // 5) PDF 변환
@@ -45,6 +46,24 @@ function generateDocuments(contractNo, customer, pkg, startDate, vars) {
     docFile: docFile,
     pdfFile: pdfFile
   };
+}
+
+/**
+ * 용역표에서 항목명이 빈 줄을 제거한다(패키지마다 5~6개로 달라서).
+ * 헤더에 '용역'이 포함된 표를 대상으로, 항목명 셀(index 1)이 빈 행을 삭제.
+ */
+function trimEmptyServiceRows(body) {
+  var tables = body.getTables();
+  for (var t = 0; t < tables.length; t++) {
+    var tbl = tables[t];
+    if (tbl.getNumRows() < 2) continue;
+    if (tbl.getRow(0).getText().indexOf('용역') === -1) continue; // 서비스 표만
+    for (var r = tbl.getNumRows() - 1; r >= 1; r--) {
+      var row = tbl.getRow(r);
+      if (row.getNumCells() < 2) continue;
+      if (row.getCell(1).getText().trim() === '') tbl.removeRow(r);
+    }
+  }
 }
 
 /** 하위 폴더 찾거나 없으면 생성 */

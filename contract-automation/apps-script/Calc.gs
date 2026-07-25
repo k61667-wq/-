@@ -30,10 +30,11 @@ function computePackage(packageId) {
     var unit = Number(it.unit_price) || 0;
     var amount = (it.amount !== '' && it.amount != null) ? Number(it.amount) : qty * unit;
     return {
-      item: it.item_name, spec: it.spec, unit: it.unit,
-      qty: qty, unitPrice: unit, amount: amount, desc: it.description || ''
+      no: Number(it.line_no) || 0, item: it.item_name, desc: it.description || '',
+      qty: qty, unit: it.unit || '개', months: Number(it.months) || 0,
+      unitPrice: unit, amount: amount
     };
-  });
+  }).sort(function (a, b) { return a.no - b.no; });
 
   var supply = Number(pkg.list_supply);
   if (!supply) supply = lines.reduce(function (s, l) { return s + l.amount; }, 0);

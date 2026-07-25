@@ -49,13 +49,17 @@ function buildVariableMap(ctx) {
     '{{계약체결일}}':  fmtKo(ctx.sign)
   };
 
-  // --- 서비스 표 8줄 → 항목N_* ---
-  for (var i = 0; i < p.lines.length; i++) {
-    var l = p.lines[i], n = (i + 1);
-    map['{{항목' + n + '_명}}']   = l.item;
-    map['{{항목' + n + '_수량}}'] = (l.qty > 0 ? l.qty + ' ' + l.unit : '-');
-    map['{{항목' + n + '_단가}}'] = (l.qty > 0 ? comma(l.unitPrice) : '-');
-    map['{{항목' + n + '_금액}}'] = (l.qty > 0 ? comma(l.amount) : '-');
+  // --- 서비스 표: 최대 6줄. 패키지별 항목 수가 달라 미사용 줄은 빈칸 처리 ---
+  // (미사용 줄은 ContractGenerator 의 trimEmptyServiceRows 가 문서에서 제거)
+  var MAX_ROWS = 6;
+  for (var i = 1; i <= MAX_ROWS; i++) {
+    var l = p.lines[i - 1];
+    map['{{항목' + i + '_명}}']   = l ? l.item : '';
+    map['{{항목' + i + '_세부}}'] = l ? l.desc : '';
+    map['{{항목' + i + '_수량}}'] = l ? String(l.qty) : '';
+    map['{{항목' + i + '_개월}}'] = l ? String(l.months) : '';
+    map['{{항목' + i + '_단가}}'] = l ? comma(l.unitPrice) : '';
+    map['{{항목' + i + '_금액}}'] = l ? comma(l.amount) : '';
   }
   return map;
 }
