@@ -74,11 +74,14 @@ function createContract(payload) {
     if (!rep) throw new Error('담당자를 선택하세요.');
     var pkg = computePackage(payload.packageId);
 
+    // 입력란(직접 타이핑/DB 자동채움 후 수정)을 우선. 없으면 DB 값으로 대체.
+    var m = payload.manualCustomer || {};
+    var hasManual = m.company || m.ceo || m.bizNo || m.address || m.phone || m.email;
     var cust = payload.customerId ? findCustomer(payload.customerId) : null;
-    var customer = cust ? {
+    var customer = hasManual ? m : (cust ? {
       company: cust.company, ceo: cust.ceo, bizNo: cust.biz_no,
       address: cust.address, phone: cust.phone, email: cust.email
-    } : (payload.manualCustomer || {});
+    } : {});
 
     // 2) 날짜/기간/계약번호 -----------------------------------------
     var start = parseDate(payload.startDate);

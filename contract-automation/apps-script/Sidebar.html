@@ -13,6 +13,8 @@
   select:focus,input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(47,109,246,.15); }
   .row{ display:flex; gap:8px; }
   .row > div{ flex:1; }
+  .cfgrid{ display:grid; grid-template-columns:1fr 1fr; gap:6px 8px; }
+  .note{ font-size:11px; color:var(--muted); margin:6px 0 0; }
   .preview{ margin-top:14px; border:1px solid var(--line); border-radius:9px; overflow:hidden; display:none; }
   .preview.on{ display:block; }
   .preview .hd{ background:#f4f6f8; padding:7px 10px; font-weight:700; font-size:12px; }
@@ -38,8 +40,17 @@
   <h3>📄 계약서 자동 작성</h3>
   <p class="sub">4가지만 선택하면 3분 안에 계약서가 생성됩니다.</p>
 
-  <label>① 고객사</label>
-  <select id="cust"><option value="">— 선택 —</option></select>
+  <label>① 고객사 (DB에서 불러오기 · 선택)</label>
+  <select id="cust"><option value="">— 직접 입력 —</option></select>
+  <div class="cfgrid" style="margin-top:6px">
+    <div><label>상호명</label><input id="c_company"></div>
+    <div><label>대표자</label><input id="c_ceo"></div>
+    <div><label>사업자등록번호</label><input id="c_bizno"></div>
+    <div><label>연락처</label><input id="c_phone"></div>
+  </div>
+  <label>소재지</label><input id="c_addr">
+  <label>전자우편 (계산서 발행용)</label><input id="c_email">
+  <p class="note">DB에서 고객을 고르면 위 칸이 자동으로 채워지고, 직접 수정·입력도 됩니다.</p>
 
   <label>② 영업 담당자</label>
   <select id="rep"><option value="">— 선택 —</option></select>
@@ -91,6 +102,16 @@
     fillSelect($('pkg'),  d.packages,  function(p){ return p.name+'  ·  '+p.duration+'개월  ·  '+won(p.total); });
   }).withFailureHandler(showErr).getFormData();
 
+  // 고객사 DB 선택 → 입력란 자동 채움 (이후 직접 수정 가능)
+  $('cust').addEventListener('change', function(){
+    var c = (DATA.customers||[]).filter(function(x){return x.id===$('cust').value;})[0];
+    if(c){
+      $('c_company').value=c.company||''; $('c_ceo').value=c.ceo||'';
+      $('c_bizno').value=c.bizNo||'';     $('c_phone').value=c.phone||'';
+      $('c_addr').value=c.address||'';    $('c_email').value=c.email||'';
+    }
+  });
+
   // 오늘 = 체결일 기본값
   (function(){ var t=new Date(); var s=t.toISOString().slice(0,10); $('sign').value=s; })();
 
@@ -126,7 +147,11 @@
     var payload = {
       customerId: $('cust').value, repId: $('rep').value, packageId: $('pkg').value,
       startDate: $('start').value, months: $('months').value, signDate: $('sign').value,
-      vatMode: $('vat').value, sendEmail: $('email').checked
+      vatMode: $('vat').value, sendEmail: $('email').checked,
+      manualCustomer: {
+        company: $('c_company').value, ceo: $('c_ceo').value, bizNo: $('c_bizno').value,
+        address: $('c_addr').value, phone: $('c_phone').value, email: $('c_email').value
+      }
     };
     google.script.run.withSuccessHandler(function(r){
       $('go').disabled=false; $('go').textContent='계약서 생성';

@@ -39,7 +39,9 @@
   }
   .fld select:focus,.fld input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(47,109,246,.25); }
   .fld.span2{ grid-column:span 2; }
-  .actions{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center; }
+  .subhead{ font-size:11.5px; font-weight:700; color:#cfd6de; letter-spacing:.02em; margin:16px 0 8px; padding-top:14px; border-top:1px solid #333c46; display:flex; align-items:center; gap:8px; }
+  .subhead .tagpill{ font-weight:600; font-size:10px; color:#9aa6b4; background:#252c34; border:1px solid #3a444f; border-radius:20px; padding:2px 9px; }
+  .actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; align-items:center; }
   .btn{
     font-family:inherit; font-size:13px; font-weight:700; padding:9px 18px; border-radius:8px;
     border:1px solid transparent; cursor:pointer; letter-spacing:.02em;
@@ -146,7 +148,7 @@
     <p class="sub">고객 · 담당자 · 패키지 · 날짜만 선택하면 수량·단가·금액·공급가액·부가세·계약금액이 자동 계산됩니다. (예시 데이터 — 실제 값으로 교체)</p>
     <div class="grid">
       <div class="fld span2">
-        <label>고객사 선택 (DB 자동입력)</label>
+        <label>고객사 (DB에서 불러오기 — 선택)</label>
         <select id="selCustomer"><option value="">— 직접 입력 —</option></select>
       </div>
       <div class="fld">
@@ -180,6 +182,14 @@
           <option value="separate">VAT 별도 (부가세 줄 표시)</option>
         </select>
       </div>
+
+      <div class="subhead" style="grid-column:1/-1">고객 정보 (갑) — 당사자의 표시 <span class="tagpill">DB에서 불러오면 자동 입력 · 직접 수정 가능</span></div>
+      <div class="fld"><label>상호명</label><input type="text" id="cf_company" placeholder="예: 행복한치과의원"></div>
+      <div class="fld"><label>대표자</label><input type="text" id="cf_ceo" placeholder="예: 김철수"></div>
+      <div class="fld"><label>사업자등록번호</label><input type="text" id="cf_bizno" placeholder="000-00-00000"></div>
+      <div class="fld"><label>연락처</label><input type="text" id="cf_phone" placeholder="010-0000-0000"></div>
+      <div class="fld span2"><label>소재지</label><input type="text" id="cf_addr" placeholder="사업장 주소"></div>
+      <div class="fld span2"><label>전자우편 <span style="font-weight:400;color:#8b96a3">(계산서 발행용)</span></label><input type="text" id="cf_email" placeholder="tax@company.com"></div>
     </div>
     <div class="actions">
       <span class="cno">계약번호 <b id="cnoView">—</b></span>
@@ -359,13 +369,22 @@
     else { el.textContent=val; el.classList.remove("empty"); }
   }
 
-  // ---- customer ----
-  function applyCustomer(){
+  // ---- customer: DB 선택 → 입력란 채움, 입력란(직접 타이핑) → 문서 즉시 반영 ----
+  function loadCustomerToInputs(){
     var c = DB.customers.filter(function(x){return x.id===$("selCustomer").value;})[0];
-    var v = c || {company:"",ceo:"",bizNo:"",address:"",phone:"",email:""};
-    setFill("cCompany",v.company); setFill("cCeo",v.ceo); setFill("cBizNo",v.bizNo);
-    setFill("cAddr",v.address);   setFill("cPhone",v.phone); setFill("cEmail",v.email);
-    setFill("sCompany",v.company); setFill("sCeo",v.ceo); setFill("sAddr",v.address);
+    if(c){ // DB 고객 선택 시에만 덮어씀 (직접 입력 중이던 값 보존)
+      $("cf_company").value=c.company||""; $("cf_ceo").value=c.ceo||"";
+      $("cf_bizno").value=c.bizNo||"";     $("cf_phone").value=c.phone||"";
+      $("cf_addr").value=c.address||"";    $("cf_email").value=c.email||"";
+    }
+    syncCustomerDoc();
+  }
+  function syncCustomerDoc(){
+    var company=$("cf_company").value, ceo=$("cf_ceo").value, bizno=$("cf_bizno").value,
+        phone=$("cf_phone").value, addr=$("cf_addr").value, email=$("cf_email").value;
+    setFill("cCompany",company); setFill("cCeo",ceo); setFill("cBizNo",bizno);
+    setFill("cAddr",addr); setFill("cPhone",phone); setFill("cEmail",email);
+    setFill("sCompany",company); setFill("sCeo",ceo); setFill("sAddr",addr); // 서명란도 동시 반영
   }
 
   // ---- rep ----
@@ -458,7 +477,8 @@
   }
 
   // ---- wire events ----
-  $("selCustomer").addEventListener("change", function(){ applyCustomer(); genContractNo(); });
+  $("selCustomer").addEventListener("change", function(){ loadCustomerToInputs(); genContractNo(); });
+  ["cf_company","cf_ceo","cf_bizno","cf_phone","cf_addr","cf_email"].forEach(function(id){ $(id).addEventListener("input", syncCustomerDoc); });
   $("selRep").addEventListener("change", applyRep);
   $("selPkg").addEventListener("change", applyPackage);
   $("selVat").addEventListener("change", function(){ renderSummary(currentPkg()); });
@@ -466,14 +486,15 @@
   $("inpMonths").addEventListener("input", recalcPeriod);
   $("inpSign").addEventListener("change", applySign);
   $("btnReset").addEventListener("click", function(){
-    ["selCustomer","selRep","selPkg","inpStart","inpMonths","inpEnd","inpSign"].forEach(function(id){ $(id).value=""; });
+    ["selCustomer","selRep","selPkg","inpStart","inpMonths","inpEnd","inpSign",
+     "cf_company","cf_ceo","cf_bizno","cf_phone","cf_addr","cf_email"].forEach(function(id){ $(id).value=""; });
     $("selVat").value="included";
-    applyCustomer(); applyRep(); applyPackage(); recalcPeriod(); applySign();
+    syncCustomerDoc(); applyRep(); applyPackage(); recalcPeriod(); applySign();
   });
 
   // ---- default sign date = today ----
   (function(){ var t=new Date(); $("inpSign").value=t.getFullYear()+"-"+pad(t.getMonth()+1)+"-"+pad(t.getDate()); })();
-  applyCustomer(); applyRep(); applyPackage(); applySign();
+  syncCustomerDoc(); applyRep(); applyPackage(); applySign();
 })();
 </script>
 </body></html>
