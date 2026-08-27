@@ -1,0 +1,4 @@
+account_id,구글계정,용도,배정_company_id,상태,2FA_설정,인증정보_보관위치,비고
+AC-001,ops.daangn01@example.com,소식 등록,CM-001,사용중,Y,vault/daangn/CM-001,비밀번호는 볼트에만 보관 — 이 시트에 절대 입력 금지
+AC-002,ops.daangn02@example.com,소식 등록,CM-002,사용중,Y,vault/daangn/CM-002,
+AC-003,ops.daangn03@example.com,소식 등록,,미배정,Y,vault/daangn/pool-03,예비 계정
