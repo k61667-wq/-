@@ -26,7 +26,6 @@ import json
 import os
 import re
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -163,7 +162,7 @@ def capture(page: Page, key: str, note: str = "") -> dict:
         page.wait_for_load_state("networkidle", timeout=8000)
     except PWTimeout:
         pass
-    time.sleep(0.6)
+    page.wait_for_timeout(600)
 
     data = page.evaluate(COLLECT_JS)
     data["key"] = key
@@ -209,12 +208,26 @@ def ensure_login(page: Page) -> None:
         except (PWTimeout, PWError) as exc:
             log(f"자동 로그인 실패({exc.__class__.__name__}) — 직접 로그인해 주세요")
 
-    print("\n  >> 브라우저에서 로그인해 주세요. 로그인되면 자동으로 진행됩니다.\n", flush=True)
-    for _ in range(300):  # 최대 5분 대기
-        if "/login" not in page.url:
-            log(f"로그인 확인됨 → {page.url}")
+    print(
+        "\n  >> 지금 열려 있는 '이 스크립트가 띄운 브라우저 창'에서 로그인해 주세요."
+        "\n     (평소 쓰던 크롬/엣지가 아니라, 방금 새로 뜬 창입니다.)"
+        "\n     로그인되면 자동으로 진행됩니다.\n",
+        flush=True,
+    )
+
+    for tick in range(300):  # 최대 5분 대기
+        # page.url 은 이벤트가 처리돼야 갱신되므로, 실제 페이지에 물어봐서 확인한다.
+        try:
+            current = page.evaluate("() => location.href")
+        except PWError:
+            current = page.url
+        if "/login" not in current:
+            log(f"로그인 확인됨 → {current}")
             return
-        time.sleep(1)
+        if tick and tick % 10 == 0:
+            log(f"대기 중... (현재 주소: {current})")
+        page.wait_for_timeout(1000)
+
     sys.exit("로그인이 확인되지 않아 중단합니다.")
 
 
@@ -234,14 +247,14 @@ def try_open_modal(page: Page, label: str, key: str, results: list) -> None:
         if target.count() == 0:
             return
         target.click(timeout=3000)
-        time.sleep(1.0)
+        page.wait_for_timeout(1000)
         results.append(capture(page, key, note=f"'{label}' 클릭으로 열린 상태"))
     except (PWTimeout, PWError) as exc:
         log(f"모달 열기 실패: {label} ({exc.__class__.__name__})")
     finally:
         try:
             page.keyboard.press("Escape")
-            time.sleep(0.4)
+            page.wait_for_timeout(400)
         except PWError:
             pass
 
@@ -267,10 +280,10 @@ def open_fab(page: Page, key: str, results: list) -> None:
                 if is_forbidden(text):
                     continue
                 b.click(timeout=3000)
-                time.sleep(1.2)
+                page.wait_for_timeout(1200)
                 results.append(capture(page, key, note="우하단 + 버튼으로 열린 모달"))
                 page.keyboard.press("Escape")
-                time.sleep(0.4)
+                page.wait_for_timeout(400)
                 return
     except (PWTimeout, PWError) as exc:
         log(f"FAB 열기 실패 ({exc.__class__.__name__})")
