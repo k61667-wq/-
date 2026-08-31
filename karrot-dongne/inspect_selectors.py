@@ -25,14 +25,13 @@ from __future__ import annotations
 import json
 import os
 import re
-import sys
 from datetime import datetime
 from pathlib import Path
 
 from playwright.sync_api import Error as PWError
 from playwright.sync_api import Page, TimeoutError as PWTimeout, sync_playwright
 
-VERSION = "v2 (로그인 감지 수정본)"
+VERSION = "v3 (ID 자동탐색 + 중간저장)"
 
 BASE = os.environ.get("KARROT_BASE", "http://49.247.202.25:8080")
 OUT = Path("karrot_dump")
@@ -230,7 +229,7 @@ def ensure_login(page: Page) -> None:
             log(f"대기 중... (현재 주소: {current})")
         page.wait_for_timeout(1000)
 
-    sys.exit("로그인이 확인되지 않아 중단합니다.")
+    raise RuntimeError("5분 안에 로그인이 확인되지 않았습니다.")
 
 
 # --------------------------------------------------------------------------
@@ -295,23 +294,197 @@ def open_fab(page: Page, key: str, results: list) -> None:
 # 메인
 # --------------------------------------------------------------------------
 
-def first_param(page: Page, pattern: str) -> str | None:
-    """현재 페이지의 링크들에서 지정한 쿼리 파라미터의 첫 값을 찾는다."""
-    hrefs = page.eval_on_selector_all("a[href]", "els => els.map(e => e.getAttribute('href'))")
-    for href in hrefs:
-        if not href:
-            continue
-        m = re.search(pattern, href)
-        if m:
-            return m.group(1)
-    # 링크가 아니라 JS 이동일 수 있으므로 페이지 HTML 전체도 훑는다
-    m = re.search(pattern, page.content())
+def current_url(page: Page) -> str:
+    try:
+        return page.evaluate("() => location.href")
+    except PWError:
+        return page.url
+
+
+# 화면 안에 흩어져 있는 id 값을 최대한 긁어모은다.
+# (링크 href / onclick / data-* / 인라인 스크립트 / 페이지 HTML 전체)
+SCAN_JS = r"""
+(name) => {
+  const found = new Set();
+  const re = new RegExp(name + '\\s*[=:]\\s*["\']?(\\d+)', 'g');
+  const push = (text) => {
+    if (!text) return;
+    let m;
+    while ((m = re.exec(text)) !== null) found.add(m[1]);
+  };
+  for (const el of document.querySelectorAll('*')) {
+    for (const a of el.attributes) push(a.value);
+  }
+  push(document.documentElement.outerHTML);
+  return Array.from(found);
+};
+"""
+
+
+def scan_id(page: Page, name: str) -> str | None:
+    """페이지 어딘가에 박혀 있는 businessId / tokenId 같은 값을 찾아본다."""
+    try:
+        found = page.evaluate(SCAN_JS, name)
+    except PWError:
+        found = []
+    if found:
+        log(f"{name} 후보 {len(found)}개 발견 → {found[0]} 사용")
+        return found[0]
+    return None
+
+
+def id_from_url(url: str, name: str) -> str | None:
+    """주소에서 쿼리 파라미터 값을 읽는다. 'id' 가 'tokenId' 안에 걸리지 않도록 [?&] 를 요구한다."""
+    m = re.search(rf"[?&]{name}=(\d+)", url)
     return m.group(1) if m else None
+
+
+def wait_for_url(page: Page, name: str, guide: str, minutes: int = 3) -> str | None:
+    """사용자가 직접 화면을 이동해 주기를 기다린 뒤, 주소에서 값을 읽는다."""
+    print(f"\n  >> {guide}\n", flush=True)
+    for tick in range(minutes * 60):
+        value = id_from_url(current_url(page), name)
+        if value:
+            log(f"{name} = {value} 확인됨")
+            return value
+        if tick and tick % 15 == 0:
+            log(f"대기 중... (현재 주소: {current_url(page)})")
+        page.wait_for_timeout(1000)
+    log(f"{minutes}분 동안 {name} 를 얻지 못해 이 단계는 건너뜁니다.")
+    return None
+
+
+def click_first_text(page: Page, label: str) -> bool:
+    """표 안의 특정 텍스트 버튼/링크를 눌러 화면 이동을 시도한다 (금지어는 제외)."""
+    if is_forbidden(label):
+        return False
+    before = current_url(page)
+    for locator in (
+        page.get_by_role("button", name=re.compile(re.escape(label))),
+        page.get_by_role("link", name=re.compile(re.escape(label))),
+        page.locator(f"text={label}"),
+    ):
+        try:
+            if locator.count() == 0:
+                continue
+            locator.first.click(timeout=3000)
+            page.wait_for_timeout(2500)
+            if current_url(page) != before:
+                return True
+        except (PWTimeout, PWError):
+            continue
+    return False
+
+
+def save_report(results: list[dict], sample: dict) -> None:
+    OUT.mkdir(exist_ok=True)
+    report = {
+        "version": VERSION,
+        "collectedAt": datetime.now().isoformat(timespec="seconds"),
+        "base": BASE,
+        "sample": sample,
+        "pages": results,
+    }
+    (OUT / "report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    log(f"report.json 저장 ({len(results)}개 화면)")
+
+
+# --------------------------------------------------------------------------
+# 메인
+# --------------------------------------------------------------------------
+
+def collect(page: Page, results: list[dict], sample: dict) -> None:
+    print("\n[2/6] 업체 목록")
+    page.goto(f"{BASE}/karrotFront/companies", wait_until="domcontentloaded")
+    results.append(capture(page, "01_companies", "업체 목록"))
+    open_fab(page, "02_companies_add_modal", results)
+    save_report(results, sample)
+
+    # --- businessId 확보: ① 화면 스캔 → ② '동네생활' 클릭 → ③ 사용자 직접 이동 ---
+    business_id = scan_id(page, "businessId")
+    if not business_id:
+        log("화면에서 못 찾음 → 첫 번째 업체의 [동네생활] 버튼을 눌러 봅니다")
+        if click_first_text(page, "동네생활"):
+            business_id = id_from_url(current_url(page), "businessId")
+    if not business_id:
+        business_id = wait_for_url(
+            page, "businessId",
+            "업체 목록에서 아무 업체나 하나 골라 [동네생활] 버튼을 눌러 주세요.\n"
+            "     (계정이 여러 개 있는 업체면 더 좋습니다. [조회] 버튼은 누르지 마세요 — 코스트가 깎입니다.)",
+        )
+    if not business_id:
+        log("업체 화면을 열지 못해 여기까지만 수집합니다.")
+        return
+    sample["businessId"] = business_id
+
+    print("\n[3/6] 업체 상세 (동네생활 / 비즈프로필)")
+    page.goto(f"{BASE}/karrotFront/index?businessId={business_id}&usageType=post",
+              wait_until="domcontentloaded")
+    results.append(capture(page, "03_business_dongne", "업체 상세 · 동네생활 탭"))
+    open_fab(page, "04_token_add_modal", results)
+    try_open_modal(page, "주소변경", "05_address_change_modal", results)
+    try_open_modal(page, "비즈프로필 작업", "06_business_bizprofile", results)
+    save_report(results, sample)
+
+    # --- tokenId 확보 ---
+    token_id = scan_id(page, "tokenId")
+    if not token_id:
+        token_id = wait_for_url(
+            page, "tokenId",
+            "계정 목록에서 계정 하나의 작업 화면으로 들어가 주세요 (보통 [선택] 버튼).\n"
+            "     주소창에 tokenId= 가 나타나면 자동으로 이어집니다.\n"
+            "     * [조회]는 코스트를 씁니다. 그 버튼은 스크립트도 누르지 않고, 사장님도 누르지 마세요.\n"
+     "     * [선택]이 코스트를 쓰는지 제가 확신할 수 없어 자동으로 누르지 않았습니다. 판단해서 눌러 주세요.",
+        )
+    if not token_id:
+        log("계정 화면을 열지 못해 여기까지만 수집합니다.")
+        return
+    sample["tokenId"] = token_id
+    sample["nickname"] = (re.search(r"nickname=([^&]+)", current_url(page)) or [None, ""])[1]
+
+    print("\n[4/6] 게시글 작성 / 목록")
+    page.goto(f"{BASE}/karrotFront/write?tokenId={token_id}&businessId={business_id}",
+              wait_until="domcontentloaded")
+    results.append(capture(page, "07_write", "게시글 작성 (등록하지 않음)"))
+
+    page.goto(f"{BASE}/karrotFront/posts?tokenId={token_id}", wait_until="domcontentloaded")
+    results.append(capture(page, "08_posts", "내 게시글 목록"))
+    save_report(results, sample)
+
+    print("\n[5/6] 게시글 상세 (댓글 / 대댓글)")
+    post_id = None
+    if click_first_text(page, "댓글"):
+        post_id = id_from_url(current_url(page), "id")
+    if not post_id:
+        post_id = scan_id(page, r"post\?id")
+    if post_id:
+        page.goto(
+            f"{BASE}/karrotFront/post?id={post_id}&tokenId={token_id}&businessId={business_id}",
+            wait_until="domcontentloaded",
+        )
+        results.append(capture(page, "09_post_detail", "게시글 상세 · 댓글 입력바"))
+        try_open_modal(page, "답글", "10_reply_form", results)
+        sample["postId"] = post_id
+    else:
+        log("이 계정에는 게시글이 없어 상세 화면은 건너뜁니다.")
+    save_report(results, sample)
+
+    print("\n[6/6] 후기 관리")
+    page.goto(
+        f"{BASE}/karrotFront/reviews?tokenId={token_id}"
+        f"&nickname={sample.get('nickname') or ''}&businessId={business_id}",
+        wait_until="domcontentloaded",
+    )
+    results.append(capture(page, "11_reviews", "후기 관리"))
+    save_report(results, sample)
 
 
 def main() -> None:
     OUT.mkdir(exist_ok=True)
     results: list[dict] = []
+    sample: dict = {}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -322,80 +495,23 @@ def main() -> None:
         page.on("dialog", lambda d: (log(f"[dialog 무시] {d.message}"), d.dismiss()))
 
         print(f"\n===== 화면 구조 수집기 {VERSION} =====")
-        print("\n[1/6] 로그인")
-        ensure_login(page)
+        try:
+            print("\n[1/6] 로그인")
+            ensure_login(page)
+            collect(page, results, sample)
+        except KeyboardInterrupt:
+            print("\n사용자가 중단했습니다. 지금까지 모은 내용을 저장합니다.")
+        except Exception as exc:  # 어떤 오류가 나도 결과는 남긴다
+            print(f"\n[오류] {exc.__class__.__name__}: {exc}")
+            print("여기까지 모은 내용을 저장합니다.")
+        finally:
+            save_report(results, sample)
 
-        print("\n[2/6] 업체 목록")
-        page.goto(f"{BASE}/karrotFront/companies", wait_until="domcontentloaded")
-        results.append(capture(page, "01_companies", "업체 목록"))
-        open_fab(page, "02_companies_add_modal", results)
-
-        business_id = first_param(page, r"businessId=(\d+)")
-        if not business_id:
-            sys.exit("업체 ID를 찾지 못했습니다. 업체 목록이 비어 있는지 확인해 주세요.")
-        log(f"샘플 businessId = {business_id}")
-
-        print("\n[3/6] 업체 상세 (동네생활 / 비즈프로필)")
-        page.goto(f"{BASE}/karrotFront/index?businessId={business_id}&usageType=post",
-                  wait_until="domcontentloaded")
-        results.append(capture(page, "03_business_dongne", "업체 상세 · 동네생활 탭"))
-        open_fab(page, "04_token_add_modal", results)
-        try_open_modal(page, "주소변경", "05_address_change_modal", results)
-        try_open_modal(page, "비즈프로필 작업", "06_business_bizprofile", results)
-
-        token_id = first_param(page, r"tokenId=(\d+)")
-        nickname = first_param(page, r"nickname=([^&\"']+)")
-        if not token_id:
-            log("계정(토큰)이 없는 업체입니다. 계정이 있는 업체로 바꿔서 다시 실행해 주세요.")
-        else:
-            log(f"샘플 tokenId = {token_id}")
-
-            print("\n[4/6] 게시글 작성 / 목록")
-            page.goto(f"{BASE}/karrotFront/write?tokenId={token_id}&businessId={business_id}",
-                      wait_until="domcontentloaded")
-            results.append(capture(page, "07_write", "게시글 작성 (등록 안 함)"))
-
-            page.goto(f"{BASE}/karrotFront/posts?tokenId={token_id}", wait_until="domcontentloaded")
-            results.append(capture(page, "08_posts", "내 게시글 목록"))
-
-            print("\n[5/6] 게시글 상세 (댓글/대댓글)")
-            post_id = first_param(page, r"[?&]id=(\d+)")
-            if post_id:
-                page.goto(
-                    f"{BASE}/karrotFront/post?id={post_id}"
-                    f"&tokenId={token_id}&businessId={business_id}",
-                    wait_until="domcontentloaded",
-                )
-                results.append(capture(page, "09_post_detail", "게시글 상세 · 댓글 입력바"))
-                try_open_modal(page, "답글", "10_reply_form", results)
-            else:
-                log("게시글이 없어 상세 화면은 건너뜁니다.")
-
-            print("\n[6/6] 후기 관리")
-            nick = nickname or ""
-            page.goto(
-                f"{BASE}/karrotFront/reviews?tokenId={token_id}"
-                f"&nickname={nick}&businessId={business_id}",
-                wait_until="domcontentloaded",
-            )
-            results.append(capture(page, "11_reviews", "후기 관리"))
-
-        report = {
-            "collectedAt": datetime.now().isoformat(timespec="seconds"),
-            "base": BASE,
-            "sample": {"businessId": business_id, "tokenId": token_id, "nickname": nickname},
-            "pages": results,
-        }
-        (OUT / "report.json").write_text(
-            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-
-        print(f"\n완료. '{OUT.resolve()}' 폴더가 생성되었습니다.")
-        print("  report.json  — 화면별 버튼/입력창 구조 (이 파일만 있으면 됩니다)")
+        print(f"\n완료. '{OUT.resolve()}' 폴더를 확인해 주세요.")
+        print("  report.json  — 화면별 버튼/입력창 구조 (이 파일이 핵심)")
         print("  html/        — 화면별 원본 HTML")
         print("  shot/        — 화면별 스크린샷")
-        print("\n브라우저를 닫으면 종료됩니다.")
-        input("  엔터를 누르면 브라우저를 닫습니다... ")
+        input("\n  엔터를 누르면 브라우저를 닫습니다... ")
         ctx.close()
         browser.close()
 
