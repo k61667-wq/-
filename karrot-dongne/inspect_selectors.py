@@ -32,7 +32,7 @@ from pathlib import Path
 from playwright.sync_api import Error as PWError
 from playwright.sync_api import Page, TimeoutError as PWTimeout, sync_playwright
 
-VERSION = "v4 (업체 지정 실행)"
+VERSION = "v5 (주소변경 모달 · 댓글 화면 보강)"
 
 BASE = os.environ.get("KARROT_BASE", "http://49.247.202.25:8080")
 OUT = Path("karrot_dump")
@@ -51,6 +51,10 @@ def log(msg: str) -> None:
 
 
 def is_forbidden(label: str) -> bool:
+    """실행 버튼이면 True. 단, 모달을 '여는' 것뿐인 버튼은 이름에 금지어가 들어
+    있어도 허용한다 (예: '주소변경'은 모달만 열고, 위험한 건 그 안의 [변경])."""
+    if any(word == label.strip() for word in SAFE_OPEN):
+        return False
     return any(word in label for word in FORBIDDEN)
 
 
@@ -243,10 +247,19 @@ def try_open_modal(page: Page, label: str, key: str, results: list) -> None:
         log(f"건너뜀(금지어 포함): {label}")
         return
     try:
-        target = page.get_by_role("button", name=re.compile(re.escape(label))).first
-        if target.count() == 0:
-            target = page.locator(f"text={label}").first
-        if target.count() == 0:
+        target = None
+        for candidate in (
+            page.get_by_role("button", name=re.compile(re.escape(label))),
+            page.get_by_role("tab", name=re.compile(re.escape(label))),
+            page.get_by_role("link", name=re.compile(re.escape(label))),
+            page.get_by_text(re.compile(re.escape(label))),
+            page.locator(f"text={label}"),
+        ):
+            if candidate.count():
+                target = candidate.first
+                break
+        if target is None:
+            log(f"화면에서 '{label}' 를 찾지 못했습니다 — 건너뜁니다")
             return
         target.click(timeout=3000)
         page.wait_for_timeout(1000)
@@ -486,7 +499,11 @@ def collect(
         try_open_modal(page, "답글", "10_reply_form", results)
         sample["postId"] = post_id
     else:
-        log("이 계정에는 게시글이 없어 상세 화면은 건너뜁니다.")
+        log("이 계정에는 게시글이 없어 댓글/대댓글 화면을 건너뜁니다.")
+        log("  → 업체 상세 표에서 '링크' 열에 [당근][복사] 버튼이 있는 행이")
+        log("    게시글을 가진 계정입니다. 그 행의 [선택]을 눌러 주소창의 tokenId를 확인한 뒤")
+        log(f"    python inspect_selectors.py {sample.get('businessId')} <그 tokenId>")
+        log("    로 한 번만 더 실행해 주세요.")
     save_report(results, sample)
 
     print("\n[6/6] 후기 관리")
