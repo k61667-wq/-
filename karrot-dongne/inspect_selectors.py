@@ -25,13 +25,14 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 
 from playwright.sync_api import Error as PWError
 from playwright.sync_api import Page, TimeoutError as PWTimeout, sync_playwright
 
-VERSION = "v3 (ID 자동탐색 + 중간저장)"
+VERSION = "v4 (업체 지정 실행)"
 
 BASE = os.environ.get("KARROT_BASE", "http://49.247.202.25:8080")
 OUT = Path("karrot_dump")
@@ -339,7 +340,7 @@ def id_from_url(url: str, name: str) -> str | None:
     return m.group(1) if m else None
 
 
-def wait_for_url(page: Page, name: str, guide: str, minutes: int = 3) -> str | None:
+def wait_for_url(page: Page, name: str, guide: str, minutes: int = 5) -> str | None:
     """사용자가 직접 화면을 이동해 주기를 기다린 뒤, 주소에서 값을 읽는다."""
     print(f"\n  >> {guide}\n", flush=True)
     for tick in range(minutes * 60):
@@ -395,15 +396,25 @@ def save_report(results: list[dict], sample: dict) -> None:
 # 메인
 # --------------------------------------------------------------------------
 
-def collect(page: Page, results: list[dict], sample: dict) -> None:
+def collect(
+    page: Page,
+    results: list[dict],
+    sample: dict,
+    given_business: str | None = None,
+    given_token: str | None = None,
+) -> None:
     print("\n[2/6] 업체 목록")
     page.goto(f"{BASE}/karrotFront/companies", wait_until="domcontentloaded")
     results.append(capture(page, "01_companies", "업체 목록"))
     open_fab(page, "02_companies_add_modal", results)
     save_report(results, sample)
 
-    # --- businessId 확보: ① 화면 스캔 → ② '동네생활' 클릭 → ③ 사용자 직접 이동 ---
-    business_id = scan_id(page, "businessId")
+    # --- businessId 확보: ⓪ 실행 인자 → ① 화면 스캔 → ② '동네생활' 클릭 → ③ 사용자 직접 이동 ---
+    business_id = given_business
+    if business_id:
+        log(f"실행 인자로 받은 businessId = {business_id} 사용")
+    if not business_id:
+        business_id = scan_id(page, "businessId")
     if not business_id:
         log("화면에서 못 찾음 → 첫 번째 업체의 [동네생활] 버튼을 눌러 봅니다")
         if click_first_text(page, "동네생활"):
@@ -429,11 +440,18 @@ def collect(page: Page, results: list[dict], sample: dict) -> None:
     save_report(results, sample)
 
     # --- tokenId 확보 ---
-    token_id = scan_id(page, "tokenId")
+    token_id = given_token
+    if token_id:
+        log(f"실행 인자로 받은 tokenId = {token_id} 사용")
+    if not token_id:
+        token_id = scan_id(page, "tokenId")
     if not token_id:
         token_id = wait_for_url(
             page, "tokenId",
             "계정 목록에서 계정 하나의 작업 화면으로 들어가 주세요 (보통 [선택] 버튼).\n"
+            "     이 업체에 계정이 하나도 없으면 [선택] 버튼도 없습니다.\n"
+            "     그럴 땐 Ctrl+C 로 끄고, 계정이 있는 업체 번호로 다시 실행하세요:\n"
+            "       python inspect_selectors.py 1107\n"
             "     주소창에 tokenId= 가 나타나면 자동으로 이어집니다.\n"
             "     * [조회]는 코스트를 씁니다. 그 버튼은 스크립트도 누르지 않고, 사장님도 누르지 마세요.\n"
      "     * [선택]이 코스트를 쓰는지 제가 확신할 수 없어 자동으로 누르지 않았습니다. 판단해서 눌러 주세요.",
@@ -486,6 +504,10 @@ def main() -> None:
     results: list[dict] = []
     sample: dict = {}
 
+    args = [a for a in sys.argv[1:] if a.isdigit()]
+    given_business = args[0] if len(args) > 0 else None
+    given_token = args[1] if len(args) > 1 else None
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
         ctx = browser.new_context(viewport={"width": 1440, "height": 900})
@@ -495,10 +517,14 @@ def main() -> None:
         page.on("dialog", lambda d: (log(f"[dialog 무시] {d.message}"), d.dismiss()))
 
         print(f"\n===== 화면 구조 수집기 {VERSION} =====")
+        if given_business:
+            print(f"      지정된 업체 businessId = {given_business}")
+        else:
+            print("      (특정 업체를 지정하려면:  python inspect_selectors.py 1107 )")
         try:
             print("\n[1/6] 로그인")
             ensure_login(page)
-            collect(page, results, sample)
+            collect(page, results, sample, given_business, given_token)
         except KeyboardInterrupt:
             print("\n사용자가 중단했습니다. 지금까지 모은 내용을 저장합니다.")
         except Exception as exc:  # 어떤 오류가 나도 결과는 남긴다
