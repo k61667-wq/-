@@ -32,6 +32,8 @@ from pathlib import Path
 from playwright.sync_api import Error as PWError
 from playwright.sync_api import Page, TimeoutError as PWTimeout, sync_playwright
 
+VERSION = "v2 (로그인 감지 수정본)"
+
 BASE = os.environ.get("KARROT_BASE", "http://49.247.202.25:8080")
 OUT = Path("karrot_dump")
 
@@ -319,6 +321,7 @@ def main() -> None:
         # 안전장치: alert/confirm 이 떠도 절대 '확인'을 누르지 않는다
         page.on("dialog", lambda d: (log(f"[dialog 무시] {d.message}"), d.dismiss()))
 
+        print(f"\n===== 화면 구조 수집기 {VERSION} =====")
         print("\n[1/6] 로그인")
         ensure_login(page)
 
