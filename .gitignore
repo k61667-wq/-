@@ -1,0 +1,4 @@
+
+# probe auth state (contains session cookies — never commit)
+auth.json
+reports/*_auth/
