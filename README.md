@@ -15,6 +15,10 @@
 | `data/견적기준표_seed.csv` | 견적 기준표 시드 데이터 (Google Sheets로 이미 생성됨) |
 | `templates/견적서_템플릿.md` | 숨고 채팅용 짧은 견적 + 상세 견적서 템플릿 |
 | `prompts/견적_생성_프롬프트.md` | 의뢰서 파싱→매칭→초안 생성 AI 프롬프트 + 출력 JSON 스키마 |
+| `docs/browser_capability_analysis.md` | 브라우저 환경에서 Claude 코딩으로 제어 가능한 기능 범위 분석 + 체크리스트 |
+| `tools/browser_capability_probe.js` | DevTools 콘솔에 붙여넣는 읽기 전용 브라우저 API 프로브 |
+| `tools/browser_capability_probe.html` | 프로브 실행·iframe 교차 출처 경계 테스트 하네스 |
+| `tools/run_probe.mjs` | Playwright 러너(헤더·쿠키·네트워크·프로브 결과를 report.json 으로 저장) |
 
 ## 이미 만들어진 것
 - ✅ Google Sheets **"숨고 견적 기준표 (자동화용)"** (실제 서비스·단가 기반, 7개 상품)

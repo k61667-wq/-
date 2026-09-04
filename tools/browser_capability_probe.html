@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browser Capability Probe Harness</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1a1d23; --muted:#5b6472; --line:#dfe3e8; --ok:#1b7f3b; --blocked:#b42318; --na:#8a5a00; --info:#175cd3; --skip:#667085; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 system-ui,-apple-system,"Noto Sans KR",sans-serif; color:var(--ink); background:var(--bg); }
+  header { padding:16px 24px; background:var(--card); border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0 12px 0 0; }
+  input[type=url] { flex:1; min-width:260px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  button { padding:8px 14px; border:1px solid var(--line); border-radius:6px; background:#fff; font:inherit; cursor:pointer; }
+  button.primary { background:#1a1d23; color:#fff; border-color:#1a1d23; }
+  main { padding:16px 24px; display:grid; gap:16px; grid-template-columns: 1fr; }
+  @media (min-width:1100px){ main { grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); } }
+  section { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  h2 { font-size:14px; margin:0 0 10px; }
+  .summary { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .pill { padding:2px 10px; border-radius:999px; font-size:12px; color:#fff; }
+  .pill.ok{background:var(--ok)} .pill.blocked{background:var(--blocked)} .pill.unavailable{background:var(--na)} .pill.info{background:var(--info)} .pill.skipped{background:var(--skip)}
+  .tablewrap { overflow-x:auto; max-height:70vh; }
+  table { border-collapse:collapse; width:100%; table-layout:fixed; font-size:12.5px; }
+  col.cat{width:11%} col.chk{width:32%} col.st{width:11%} col.det{width:46%}
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { position:sticky; top:0; background:#fafbfc; }
+  td.s { font-weight:600; white-space:nowrap; }
+  td.s.ok{color:var(--ok)} td.s.blocked{color:var(--blocked)} td.s.unavailable{color:var(--na)} td.s.info{color:var(--info)} td.s.skipped{color:var(--skip)}
+  td.d { color:var(--muted); overflow-wrap:anywhere; }
+  td.c { overflow-wrap:anywhere; }
+  iframe { width:100%; height:420px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  pre { background:#0f172a; color:#e2e8f0; padding:10px; border-radius:6px; overflow:auto; max-height:260px; font-size:12px; }
+  .note { color:var(--muted); font-size:12.5px; }
+  .filters label { margin-right:10px; font-size:12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Browser Capability Probe</h1>
+  <button class="primary" id="runHere">이 페이지에서 실행</button>
+  <input type="url" id="frameUrl" value="https://karrot.evenit.co.kr/" placeholder="https://...">
+  <button id="loadFrame">iframe 로드(교차 출처 경계 테스트)</button>
+  <button id="copyJson">JSON 복사</button>
+  <button id="downloadJson">JSON 다운로드</button>
+</header>
+<main>
+  <section>
+    <h2>결과</h2>
+    <div class="summary" id="summary"></div>
+    <div class="filters" id="filters">
+      <label><input type="checkbox" value="ok" checked> ok</label>
+      <label><input type="checkbox" value="blocked" checked> blocked</label>
+      <label><input type="checkbox" value="unavailable" checked> unavailable</label>
+      <label><input type="checkbox" value="info" checked> info</label>
+      <label><input type="checkbox" value="skipped" checked> skipped</label>
+    </div>
+    <div class="tablewrap"><table id="tbl"><colgroup><col class="cat"><col class="chk"><col class="st"><col class="det"></colgroup><thead><tr><th>category</th><th>check</th><th>status</th><th>detail</th></tr></thead><tbody></tbody></table></div>
+  </section>
+  <section>
+    <h2>교차 출처(iframe) 경계 테스트</h2>
+    <p class="note">대상 사이트를 iframe에 로드한 뒤, 부모 문서에서 DOM 접근을 시도합니다. 정상적인 브라우저에서는 <b>반드시 차단</b>되어야 하며, X-Frame-Options / CSP frame-ancestors 가 설정된 사이트는 로드 자체가 거부됩니다. 이 결과가 "가능한 것 / 불가능한 것"의 실제 경계입니다.</p>
+    <iframe id="frame" title="target" referrerpolicy="no-referrer"></iframe>
+    <pre id="frameLog">(iframe 미로드)</pre>
+    <h2>대상 페이지에서 직접 실행하기</h2>
+    <p class="note">1) 대상 페이지를 열고 DevTools(F12) → Console. 2) <code>tools/browser_capability_probe.js</code> 전체를 붙여넣고 Enter. 3) <code>copy(JSON.stringify(window.__BROWSER_PROBE_RESULT__))</code> 로 결과 복사. 헤더 기반 CSP·HttpOnly 쿠키·서버 헤더는 <code>tools/run_probe.mjs</code>(Playwright)로만 확인됩니다.</p>
+    <pre id="rawJson">(아직 실행 전)</pre>
+  </section>
+</main>
+<script>
+(function () {
+  var PROBE_SRC = 'browser_capability_probe.js';
+  var lastResult = null;
+
+  function render(result) {
+    lastResult = result;
+    var sum = document.getElementById('summary'); sum.innerHTML = '';
+    Object.keys(result.summary).forEach(function (k) {
+      var s = document.createElement('span'); s.className = 'pill ' + k; s.textContent = k + ' ' + result.summary[k]; sum.appendChild(s);
+    });
+    var tb = document.querySelector('#tbl tbody'); tb.innerHTML = '';
+    result.rows.forEach(function (r) {
+      var tr = document.createElement('tr'); tr.dataset.status = r.status;
+      tr.innerHTML = '<td class="c">' + esc(r.category) + '</td><td class="c">' + esc(r.label) + '</td><td class="s ' + r.status + '">' + esc(r.status) + '</td><td class="d">' + esc(r.detail) + '</td>';
+      tb.appendChild(tr);
+    });
+    document.getElementById('rawJson').textContent = JSON.stringify(result, null, 2);
+    applyFilters();
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function applyFilters() {
+    var on = {}; document.querySelectorAll('#filters input').forEach(function (i) { on[i.value] = i.checked; });
+    document.querySelectorAll('#tbl tbody tr').forEach(function (tr) { tr.style.display = on[tr.dataset.status] ? '' : 'none'; });
+  }
+  function loadProbeSource() {
+    return fetch(PROBE_SRC, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); });
+  }
+  function runHere() {
+    document.getElementById('rawJson').textContent = '실행 중...';
+    loadProbeSource().then(function (src) { return (0, eval)(src); }).then(render).catch(function (e) {
+      document.getElementById('rawJson').textContent = '프로브 로드 실패: ' + e.message + '\n(file:// 로 열었다면 fetch가 차단됩니다. `npx serve tools` 또는 `python3 -m http.server` 로 서빙 후 http://localhost 로 여세요.)';
+    });
+  }
+  function loadFrame() {
+    var url = document.getElementById('frameUrl').value.trim();
+    var f = document.getElementById('frame'); var log = document.getElementById('frameLog');
+    var lines = ['target: ' + url, 'parent origin: ' + location.origin];
+    log.textContent = lines.concat(['loading...']).join('\n');
+    var settled = false;
+    function report(tag) {
+      if (settled) return; settled = true;
+      lines.push('event: ' + tag);
+      try {
+        var doc = f.contentDocument || (f.contentWindow && f.contentWindow.document);
+        lines.push(doc ? 'contentDocument: ACCESSIBLE (same-origin or about:blank) title="' + doc.title + '" elements=' + doc.getElementsByTagName('*').length : 'contentDocument: null (cross-origin -> blocked, expected)');
+      } catch (e) { lines.push('contentDocument: BLOCKED (' + e.name + ': ' + e.message + ') -> expected for cross-origin'); }
+      try { lines.push('contentWindow.location.href: ' + f.contentWindow.location.href); } catch (e) { lines.push('contentWindow.location: BLOCKED (' + e.name + ') -> expected'); }
+      try { f.contentWindow.postMessage({ type: 'probe-ping' }, '*'); lines.push('postMessage: sent (works only if the target implements a listener)'); } catch (e) { lines.push('postMessage: ' + e.message); }
+      lines.push('note: if the frame stays blank, the site sends X-Frame-Options / CSP frame-ancestors (visible only in DevTools > Network or run_probe.mjs).');
+      log.textContent = lines.join('\n');
+    }
+    f.addEventListener('load', function () { report('load'); }, { once: true });
+    f.addEventListener('error', function () { report('error'); }, { once: true });
+    setTimeout(function () { report('timeout 8s'); }, 8000);
+    f.src = url;
+  }
+  window.addEventListener('message', function (ev) {
+    var log = document.getElementById('frameLog');
+    log.textContent += '\nmessage from ' + ev.origin + ': ' + (typeof ev.data === 'string' ? ev.data : JSON.stringify(ev.data)).slice(0, 200);
+  });
+  document.getElementById('runHere').addEventListener('click', runHere);
+  document.getElementById('loadFrame').addEventListener('click', loadFrame);
+  document.getElementById('filters').addEventListener('change', applyFilters);
+  document.getElementById('copyJson').addEventListener('click', function () {
+    if (!lastResult) return alert('먼저 실행하세요.');
+    var t = JSON.stringify(lastResult);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { alert('복사됨'); }, function (e) { alert('복사 실패: ' + e.message); });
+    else alert('Clipboard API 없음(비보안 컨텍스트)');
+  });
+  document.getElementById('downloadJson').addEventListener('click', function () {
+    if (!lastResult) return alert('먼저 실행하세요.');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(lastResult, null, 2)], { type: 'application/json' }));
+    a.download = 'browser_probe_' + Date.now() + '.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+})();
+</script>
+</body>
+</html>
